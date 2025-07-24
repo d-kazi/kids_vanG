@@ -1,0 +1,59 @@
+**Cursor‑Powered MVP Development Plan**
+*Leveraging Cursor AI as your coding assistant throughout every phase.*
+
+---
+
+## 1. MVP Goals
+
+1. **Core Interaction:** Touch‑driven dot‑to‑dot tracing with next‑dot highlighting and undo.
+2. **AI Coaching:** Friendly voice prompts after each successful line.
+3. **Template Flexibility:** Three starter templates (smiley, child’s face, superhero mask).
+4. **Invite‑Only Access:** Simple email‑link or token gate.
+5. **Polish & Metrics:** Progress indicator and basic usage logging.
+
+---
+
+## 2. Phases & Cursor Workflows
+
+| Phase                             | Activities & Cursor Prompts                                                                                                                                                                                                                                                                                                     | Deliverable                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **1. Requirements & Design**      | - **Prompt Cursor**: “Generate a user‑flow diagram description for sign‑in → select template → draw → feedback.”<br>- **Prompt Cursor**: “Produce wireframe HTML/CSS mockup code for a full‑screen canvas with header and simple controls.”                                                                                     | • User‑flow sketch<br>• HTML/CSS wireframe         |
+| **2. Canvas Engine Prototype**    | - **Prompt Cursor**: “Write plain JS to render dots from JSON on an HTML5 canvas and detect taps near the next dot.”<br>- **Prompt Cursor**: “Extend the above code to draw lines between visited dots and highlight next/future dots.”<br>- **Prompt Cursor**: “Add an ‘Undo’ function that removes the last dot and redraws.” | • Interactive dot‑to‑dot JS snippet                |
+| **3. Voice Feedback Integration** | - **Prompt Cursor**: “Create a stub HTTP endpoint `/api/feedback` that returns a JSON `{ text: 'Great job!' }`.”<br>- **Prompt Cursor**: “Show how to call this endpoint from JS and speak the response using Web Speech API.”                                                                                                  | • Canvas + mock TTS integration                    |
+| **4. Template Management**        | - **Prompt Cursor**: “Define three JSON files (`smiley.json`, `child.json`, `hero.json`) with x/y arrays for each dot sequence.”<br>- **Prompt Cursor**: “Write JS to fetch `/templates/{id}.json` based on URL query and reload the canvas.”                                                                                   | • Swappable template loader                        |
+| **5. Access Control**             | - **Prompt Cursor**: “Outline a simple token‑based gate: JS checks `?token=XYZ` in URL, otherwise redirects to a “Request Invite” page.”<br>- **Prompt Cursor**: “Generate HTML for an email‑link request form and JS to send the link.”                                                                                        | • Invite‑only front gate & form                    |
+| **6. Testing, Polish & Deploy**   | - **Prompt Cursor**: “Suggest a minimal in‑canvas progress indicator (e.g. ‘3/10 dots’) and JS to update it.”<br>- **Prompt Cursor**: “Write code to log each session’s dot count and duration to `localStorage` or a simple POST.”<br>- **Prompt Cursor**: “Produce deployment instructions for your chosen host.”             | • Polished UI + basic analytics + deployment guide |
+
+---
+
+## 3. Timeframe & Cursor Check‑Ins
+
+| Week | Focus                                    | Cursor‑Backed Milestone                                    |
+| ---- | ---------------------------------------- | ---------------------------------------------------------- |
+| 1    | Phases 1 & 2                             | Wireframes + fully working canvas prototype                |
+| 2    | Phase 3 stub → real feedback integration | Canvas speaks mock messages → real AI endpoint integration |
+| 3    | Phase 4 & 5                              | Dynamic templates + invite‑only gate live                  |
+| 4    | Phase 6 & final QA                       | Progress UI, logging, QA on iPad, live MVP URL shared      |
+
+---
+
+## 4. How to “Vibe Code” with Cursor
+
+* **Inline Prompts**: In your VS Code‑Cursor editor, type natural prompts above empty functions or stubs and accept suggestions.
+* **Iterative Edits**: Ask Cursor to refactor or optimize (e.g., “Make this draw loop debounce for performance”).
+* **Test Generation**: Prompt “Create simple unit tests for dot‑to‑dot ordering logic.”
+* **Documentation**: Use Cursor to scaffold short README sections for each phase.
+
+---
+
+## 5. Success Criteria
+
+* **Children** can tap through all dots in order and undo.
+* **Voice prompts** play within 1 s after each line.
+* **Three templates** load and switch seamlessly.
+* **Only invited** testers can access the app.
+* **Progress** displays and basic session logs exist.
+
+---
+
+With Cursor AI as your co‑pilot, you’ll “vibe‑code” each deliverable faster, keep your focus on product flow, and have a live, testable prototype on your iPad by week 4. Go ahead and start with **Phase 1 prompts** in your Cursor editor—let me know how it goes! 

@@ -1,0 +1,128 @@
+Here’s a suite of **high‑level integration tests** covering the core end‑to‑end flows of your MVP. You can implement these in any test harness or even drive them manually on the iPad—what matters is that each workflow is verified as a whole.
+
+---
+
+### 1. Invite‑Only Access Flow
+
+**Purpose:** Ensure only users with a valid invite token can reach the canvas.
+
+* **Precondition:** You have a generated invite link (e.g. `https://…?token=ABC123`).
+* **Steps:**
+
+  1. Open the app URL without any token.
+  2. Verify you’re redirected to “Request Invite” or shown an error.
+  3. Open the URL with `?token=ABC123`.
+  4. Complete any email‑link confirmation.
+* **Expected:**
+
+  * (Step 1) Access is blocked.
+  * (Step 3–4) You land on the canvas and can see the dot template.
+
+---
+
+### 2. Template Selection & Loading
+
+**Purpose:** Verify dynamic template swapping works via URL or UI.
+
+* **Precondition:** You’re signed in.
+* **Steps:**
+
+  1. Visit `https://…?template=smiley`.
+  2. Confirm the smiley‑face dots appear.
+  3. Change to `?template=child` (or click the “Child Face” button if UI exists).
+  4. Confirm the child‑face dots replace the smiley dots.
+* **Expected:**
+
+  * The correct dot coordinates load each time.
+  * No leftover dots from the previous template.
+
+---
+
+### 3. Dot‑to‑Dot Tracing Flow
+
+**Purpose:** Validate the core draw interaction.
+
+* **Precondition:** Signed in, smiley template loaded.
+* **Steps:**
+
+  1. Note the first dot is highlighted red.
+  2. Tap exactly on the red dot → it turns green, a line appears.
+  3. Tap each subsequent red dot in order, watching the line grow.
+  4. Attempt to tap a gray (future) dot out of order.
+* **Expected:**
+
+  * (2–3) Dots turn green in sequence and the line connects them.
+  * (4) Taps on non‑current dots have no effect.
+
+---
+
+### 4. “Undo” Functionality
+
+**Purpose:** Ensure users can step backward.
+
+* **Precondition:** At least two dots connected.
+* **Steps:**
+
+  1. Connect three dots in order.
+  2. Press the “Undo” button or control.
+  3. Observe which dots are now green vs. red.
+  4. Press “Undo” again.
+* **Expected:**
+
+  * (2) Only the latest dot is removed; the line retracts one segment; the next dot is red again.
+  * (4) You can undo all the way back to the first dot (or zero).
+
+---
+
+### 5. AI Voice Feedback Trigger
+
+**Purpose:** Confirm that after the second successful dot, a voice prompt plays.
+
+* **Precondition:** Tracing flow working.
+* **Steps:**
+
+  1. Connect the first dot (no feedback expected).
+  2. Connect the second dot.
+  3. Listen for the AI voice message.
+  4. Connect a third dot and observe if another message plays.
+* **Expected:**
+
+  * (2–3) Within 1 s after the second dot, a short AI‑generated praise is spoken.
+  * (4) Subsequent connections also trigger new voice prompts.
+
+---
+
+### 6. Progress Indicator & Logging
+
+**Purpose:** Verify that progress is displayed and usage is captured.
+
+* **Precondition:** Canvas and logging are wired up.
+* **Steps:**
+
+  1. Begin a new session.
+  2. As you connect each dot, check the on‑screen “X of Y dots” indicator.
+  3. Finish or undo a few steps.
+  4. End the session (close or reload).
+  5. Inspect the usage log (e.g. localStorage or server entry).
+* **Expected:**
+
+  * (2) The indicator updates correctly.
+  * (4–5) A log entry exists recording total dots connected and session duration.
+
+---
+
+### 7. Full End‑to‑End Scenario
+
+**Purpose:** Validate the entire happy‑path in one go.
+
+* **Steps:**
+
+  1. Open invite link → sign in → smiley template loads.
+  2. Draw through all dots in order, tapping only the red ones.
+  3. Use “Undo” twice mid‑way, then resume.
+  4. Hear AI encouragements after dot 2, 4, and 6.
+  5. Watch progress indicator go from 0/10 → 10/10.
+  6. Close the app and verify one complete session log.
+* **Expected:**
+
+  * Entire flow completes with correct visual, audio, and logging behavior—no errors or dead‑ends. 
