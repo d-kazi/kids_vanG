@@ -94,11 +94,27 @@
     let visited = [];
     let currentDot = 0;
     let lines = [];
-    const DOT_RADIUS = 18;
-    const NEXT_DOT_RADIUS = 26;
-    const COMPLETED_DOT_RADIUS = 18;
-    const FUTURE_DOT_RADIUS = 12;
+    const DOT_RADIUS = 6;
+    const NEXT_DOT_RADIUS = 9;
+    const COMPLETED_DOT_RADIUS = 6;
+    const FUTURE_DOT_RADIUS = 4;
     const TAP_RADIUS = 32;
+
+    // --- Feature Order ---
+    const FEATURE_ORDER = ["outline", "hair", "eye_left", "eye_right", "nose", "smile"];
+    let currentFeatureIdx = 0;
+    let visitedByFeature = {};
+
+    function resetProgress() {
+      console.log("resetProgress called");
+      currentFeatureIdx = 0;
+      visitedByFeature = {};
+      if (dotTemplate && dotTemplate.features) {
+        FEATURE_ORDER.forEach(f => {
+          if (dotTemplate.features[f]) visitedByFeature[f] = [];
+        });
+      }
+    }
 
     // --- Utility ---
     function getCanvasSize() {
@@ -115,53 +131,106 @@
       };
     }
 
+    // --- Drawing Helper ---
+    function drawFeatureDots(dots, connectLines = true, highlightIdx = -1, visitedArr = [], closeLoop = false) {
+      const [w, h] = getCanvasSize();
+      if (connectLines) {
+        // Draw lines for interactive feature
+        ctx.strokeStyle = '#4a90e2';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        for (let i = 1; i < visitedArr.length; i++) {
+          const prev = scaleDot(dots[visitedArr[i-1]], w, h);
+          const curr = scaleDot(dots[visitedArr[i]], w, h);
+          ctx.moveTo(prev.x, prev.y);
+          ctx.lineTo(curr.x, curr.y);
+        }
+        // Close the loop if requested and at least 2 dots are visited
+        if (closeLoop && visitedArr.length > 1) {
+          const first = scaleDot(dots[visitedArr[0]], w, h);
+          const last = scaleDot(dots[visitedArr[visitedArr.length-1]], w, h);
+          ctx.moveTo(last.x, last.y);
+          ctx.lineTo(first.x, first.y);
+        }
+        ctx.stroke();
+      }
+      dots.forEach((dot, i) => {
+        const {x, y} = scaleDot(dot, w, h);
+        let color, radius;
+        if (connectLines) {
+          // Interactive feature logic
+          if (visitedArr && visitedArr.includes(i)) {
+            color = '#4caf50'; // completed
+            radius = COMPLETED_DOT_RADIUS;
+          } else if (i === highlightIdx) {
+            color = '#ff3b3b'; // next
+            radius = NEXT_DOT_RADIUS;
+          } else {
+            color = '#bbb';
+            radius = FUTURE_DOT_RADIUS;
+          }
+          ctx.shadowColor = (i === highlightIdx) ? '#ffb347' : 'transparent';
+          ctx.shadowBlur = (i === highlightIdx) ? 6 : 0;
+        } else {
+          // Static feature logic: always gray, small, no numbers, no highlights
+          color = '#bbb';
+          radius = FUTURE_DOT_RADIUS;
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+        }
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Dot number (only for interactive feature)
+        if (connectLines) {
+          ctx.fillStyle = '#fff';
+          ctx.font = `${radius}px bold sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(i+1, x, y);
+        }
+      });
+    }
+
     // --- Drawing ---
     function draw() {
       const [w, h] = getCanvasSize();
       canvas.width = w;
       canvas.height = h;
       ctx.clearRect(0, 0, w, h);
-      if (!dotTemplate) return;
-      // Draw lines
-      ctx.strokeStyle = '#4a90e2';
-      ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      for (let i = 1; i < visited.length; i++) {
-        const prev = scaleDot(dotTemplate.dots[visited[i-1]], w, h);
-        const curr = scaleDot(dotTemplate.dots[visited[i]], w, h);
-        ctx.moveTo(prev.x, prev.y);
-        ctx.lineTo(curr.x, curr.y);
-      }
-      ctx.stroke();
-      // Draw dots
-      dotTemplate.dots.forEach((dot, i) => {
-        const {x, y} = scaleDot(dot, w, h);
-        let color = '#bbb';
-        let radius = FUTURE_DOT_RADIUS;
-        if (visited.includes(i)) {
-          color = '#4caf50'; // completed
-          radius = COMPLETED_DOT_RADIUS;
-        } else if (i === visited[visited.length]) {
-          color = '#ff3b3b'; // next
-          radius = NEXT_DOT_RADIUS;
+      if (!dotTemplate || !dotTemplate.features) return;
+
+      FEATURE_ORDER.forEach((feature, idx) => {
+        const dots = dotTemplate.features[feature];
+        if (!dots) return;
+        const isOutline = feature === 'outline';
+        if (idx < currentFeatureIdx) {
+          // Previous features: all dots completed and connected
+          const allVisited = Array.from({length: dots.length}, (_, i) => i);
+          drawFeatureDots(dots, true, -1, allVisited, isOutline);
+        } else if (idx === currentFeatureIdx) {
+          // Current feature: show progress and highlight next dot
+          drawFeatureDots(
+            dots,
+            true,
+            visitedByFeature[feature].length,
+            visitedByFeature[feature],
+            isOutline
+          );
+        } else {
+          // Future features: gray dots only
+          drawFeatureDots(dots, false, -1, [], false);
         }
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = color;
-        ctx.shadowColor = (i === visited[visited.length]) ? '#ffb347' : 'transparent';
-        ctx.shadowBlur = (i === visited[visited.length]) ? 16 : 0;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Dot number
-        ctx.fillStyle = '#fff';
-        ctx.font = `${radius}px bold sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(i+1, x, y);
       });
+
       // Progress
-      progressEl.textContent = `${visited.length} of ${dotTemplate.dots.length} dots`;
+      const activeFeature = FEATURE_ORDER[currentFeatureIdx];
+      const activeDots = dotTemplate.features[activeFeature] || [];
+      const activeVisited = visitedByFeature[activeFeature] || [];
+      progressEl.textContent = `Feature: ${activeFeature} (${activeVisited.length} of ${activeDots.length} dots)`;
     }
 
     // --- Voice Feedback ---
@@ -180,40 +249,41 @@
 
     // --- Interaction ---
     function handleTap(e) {
-      if (!dotTemplate) return;
+      if (!dotTemplate || !dotTemplate.features) return;
       const [w, h] = getCanvasSize();
       const rect = canvas.getBoundingClientRect();
       const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
       const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-      
-      // Determine which dot to check for tapping
-      let targetIdx;
-      if (visited.length === dotTemplate.dots.length) {
-        // All dots visited, allow tapping dot 1 to complete the circle
-        targetIdx = 0;
+
+      const feature = FEATURE_ORDER[currentFeatureIdx];
+      const dots = dotTemplate.features[feature];
+      const visited = visitedByFeature[feature];
+      let nextIdx;
+      if (visited.length === dots.length) {
+        nextIdx = 0;
       } else {
-        // Normal case: tap the next dot in sequence
-        targetIdx = visited.length;
+        nextIdx = visited.length;
       }
-      
-      const targetDot = scaleDot(dotTemplate.dots[targetIdx], w, h);
-      const dist = Math.hypot(x - targetDot.x, y - targetDot.y);
-      
+      const nextDot = scaleDot(dots[nextIdx], w, h);
+      const dist = Math.hypot(x - nextDot.x, y - nextDot.y);
       if (dist < TAP_RADIUS) {
-        if (visited.length === dotTemplate.dots.length) {
-          // Complete the circle by adding dot 1 again
+        if (visited.length === dots.length) {
           visited.push(0);
         } else {
-          // Normal case: add the next dot
-          visited.push(targetIdx);
+          visited.push(nextIdx);
         }
         draw();
-        // Voice feedback after the second and subsequent dots
         if (visited.length >= 2) {
           getFeedbackAndSpeak();
         }
+        // Move to next feature if done
+        if (visited.length > 0 && visited.length === dots.length) {
+          if (currentFeatureIdx < FEATURE_ORDER.length - 1) {
+            currentFeatureIdx++;
+            draw();
+          }
+        }
       } else {
-        // Optional: gentle feedback for wrong tap
         canvas.style.transition = 'box-shadow 0.2s';
         canvas.style.boxShadow = '0 0 12px 2px #ffb3b3';
         setTimeout(() => { canvas.style.boxShadow = ''; }, 200);
@@ -221,17 +291,30 @@
     }
 
     function handleUndo() {
+      if (!dotTemplate || !dotTemplate.features) return;
+      const feature = FEATURE_ORDER[currentFeatureIdx];
+      const visited = visitedByFeature[feature];
       if (visited.length > 0) {
         visited.pop();
+        draw();
+      } else if (currentFeatureIdx > 0) {
+        // Go back to previous feature if possible
+        currentFeatureIdx--;
         draw();
       }
     }
 
     // --- Template Loading ---
+    function getTemplateFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('template') || 'smiley';
+    }
+
     async function loadTemplate(name) {
-      const resp = await fetch(`${name}.json`);
+      console.log("loadTemplate called with", name);
+      const resp = await fetch(`templates/${name}.json`);
       dotTemplate = await resp.json();
-      visited = [];
+      resetProgress();
       draw();
     }
 
@@ -245,7 +328,7 @@
 
     // --- Init ---
     window.addEventListener('resize', draw);
-    loadTemplate('smiley');
+    loadTemplate(getTemplateFromQuery());
   </script>
 </body>
 </html> 
