@@ -57,3 +57,16 @@
 ---
 
 With Cursor AI as your co‑pilot, you’ll “vibe‑code” each deliverable faster, keep your focus on product flow, and have a live, testable prototype on your iPad by week 4. Go ahead and start with **Phase 1 prompts** in your Cursor editor—let me know how it goes! 
+
+---
+
+## For Further Work
+
+- Refactor invite token storage and validation to use a secure backend or database instead of hardcoded values.
+- Implement email-based invite sending and management.
+- Add user authentication and session management for persistent access control.
+- Support admin dashboard for managing invites and monitoring usage.
+- Add analytics and advanced logging for user engagement and performance.
+- Internationalization/localization for multi-language support.
+- Accessibility improvements for screen readers and keyboard navigation.
+- Responsive design enhancements for more device types. 

@@ -39,12 +39,28 @@
       border: 1px solid #ccc;
       background: #fff;
       cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .controls button:hover, .controls select:hover {
+      background: #f8f8f8;
+      border-color: #999;
+      transform: translateY(-1px);
+    }
+    
+    .controls button:active {
+      transform: translateY(0);
     }
     .progress {
       margin-left: auto;
       margin-right: 1rem;
       font-size: 1rem;
       color: #555;
+      background: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border: 1px solid #e0e0e0;
     }
     .canvas-container {
       flex: 1;
@@ -99,6 +115,11 @@
     const COMPLETED_DOT_RADIUS = 6;
     const FUTURE_DOT_RADIUS = 4;
     const TAP_RADIUS = 32;
+    
+    // Session tracking
+    let sessionStartTime = Date.now();
+    let undoCount = 0;
+    let completedFeatures = {};
 
     // --- Feature Order ---
     const FEATURE_ORDER = ["outline", "hair", "eye_left", "eye_right", "nose", "smile"];
@@ -234,12 +255,25 @@
     }
 
     // --- Voice Feedback ---
-    async function getFeedbackAndSpeak() {
+    async function getFeedbackAndSpeak(currentFeature = null) {
       try {
-        const resp = await fetch('http://localhost:3000/api/feedback');
+        // Use passed feature or fall back to current feature
+        const activeFeature = currentFeature || FEATURE_ORDER[currentFeatureIdx];
+        const activeDots = dotTemplate.features[activeFeature] || [];
+        const activeVisited = visitedByFeature[activeFeature] || [];
+        
+        const params = new URLSearchParams({
+          feature: activeFeature,
+          progress: activeVisited.length,
+          total: activeDots.length
+        });
+        
+        const resp = await fetch(`http://localhost:3000/api/feedback?${params}`);
         const data = await resp.json();
         if (data.text) {
           const utter = new window.SpeechSynthesisUtterance(data.text);
+          utter.rate = 0.9; // Slightly slower for children
+          utter.pitch = 1.1; // Slightly higher pitch for friendliness
           window.speechSynthesis.speak(utter);
         }
       } catch (e) {
@@ -273,14 +307,17 @@
           visited.push(nextIdx);
         }
         draw();
-        if (visited.length >= 2) {
-          getFeedbackAndSpeak();
-        }
         // Move to next feature if done
         if (visited.length > 0 && visited.length === dots.length) {
+          completedFeatures[feature] = true;
+          // Give feedback only when feature is completed
+          getFeedbackAndSpeak(feature);
           if (currentFeatureIdx < FEATURE_ORDER.length - 1) {
             currentFeatureIdx++;
             draw();
+          } else {
+            // All features completed - log session
+            logSession();
           }
         }
       } else {
@@ -296,11 +333,41 @@
       const visited = visitedByFeature[feature];
       if (visited.length > 0) {
         visited.pop();
+        undoCount++;
         draw();
       } else if (currentFeatureIdx > 0) {
         // Go back to previous feature if possible
         currentFeatureIdx--;
+        undoCount++;
         draw();
+      }
+    }
+
+    // --- Session Logging ---
+    async function logSession() {
+      try {
+        const sessionDuration = Math.round((Date.now() - sessionStartTime) / 1000);
+        const totalDots = Object.values(dotTemplate.features).reduce((sum, dots) => sum + dots.length, 0);
+        const completedDots = Object.values(visitedByFeature).reduce((sum, visited) => sum + visited.length, 0);
+        
+        const sessionData = {
+          template: dotTemplate.name,
+          totalDots,
+          completedDots,
+          sessionDuration,
+          undos: undoCount,
+          features: completedFeatures
+        };
+        
+        await fetch('http://localhost:3000/api/log-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sessionData)
+        });
+        
+        console.log('Session logged successfully');
+      } catch (e) {
+        console.warn('Failed to log session:', e);
       }
     }
 
@@ -318,6 +385,21 @@
       draw();
     }
 
+    async function checkInviteToken() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (!token) {
+        document.body.innerHTML = '<div style="padding:2rem;text-align:center;color:#b00;font-size:1.5rem;">Access denied: invite token required in URL.<br>Contact the app owner for access.</div>';
+        throw new Error('No token');
+      }
+      const resp = await fetch(`/api/validate-token?token=${encodeURIComponent(token)}`);
+      const data = await resp.json();
+      if (!data.valid) {
+        document.body.innerHTML = '<div style="padding:2rem;text-align:center;color:#b00;font-size:1.5rem;">Access denied: invalid invite token.<br>Contact the app owner for access.</div>';
+        throw new Error('Invalid token');
+      }
+    }
+
     // --- Event Listeners ---
     canvas.addEventListener('click', handleTap);
     canvas.addEventListener('touchstart', handleTap);
@@ -328,7 +410,9 @@
 
     // --- Init ---
     window.addEventListener('resize', draw);
-    loadTemplate(getTemplateFromQuery());
+    checkInviteToken().then(() => {
+      loadTemplate(getTemplateFromQuery());
+    });
   </script>
 </body>
 </html> 
