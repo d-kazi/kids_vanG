@@ -38,10 +38,6 @@ An interactive web application that helps kids learn to draw by connecting dots 
    npm start
    ```
 
-4. Open your browser and navigate to:
-   - Smiley: http://localhost:3000/?template=smiley&token=b7f3e2c1-9a4d-4e2b-8c1a-2f3d4e5b6a7c
-   - Child: http://localhost:3000/?template=child&token=b7f3e2c1-9a4d-4e2b-8c1a-2f3d4e5b6a7c
-   - Hero: http://localhost:3000/?template=hero&token=b7f3e2c1-9a4d-4e2b-8c1a-2f3d4e5b6a7c
 
 ## Deployment
 
