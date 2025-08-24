@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -10,57 +11,118 @@ app.use(express.json());
 // Serve static files from the root directory
 app.use(express.static(__dirname));
 
-// In-memory session storage (in production, use a database)
-const sessionLogs = [];
+// File-based session storage
+const LOGS_FILE = path.join(__dirname, 'logs', 'sessions.json');
+let sessionLogs = [];
 
-// Enhanced feedback system with varied responses
+// Ensure logs directory exists
+function ensureLogsDirectory() {
+  const logsDir = path.dirname(LOGS_FILE);
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+}
+
+// Load existing logs from file
+function loadSessionLogs() {
+  try {
+    ensureLogsDirectory();
+    if (fs.existsSync(LOGS_FILE)) {
+      const data = fs.readFileSync(LOGS_FILE, 'utf8');
+      sessionLogs = JSON.parse(data);
+      console.log(`Loaded ${sessionLogs.length} existing session logs`);
+    } else {
+      sessionLogs = [];
+      console.log('No existing logs found, starting fresh');
+    }
+  } catch (error) {
+    console.error('Error loading session logs:', error);
+    sessionLogs = [];
+  }
+}
+
+// Save logs to file
+function saveSessionLogs() {
+  try {
+    ensureLogsDirectory();
+    fs.writeFileSync(LOGS_FILE, JSON.stringify(sessionLogs, null, 2));
+    console.log(`Saved ${sessionLogs.length} session logs to file`);
+  } catch (error) {
+    console.error('Error saving session logs:', error);
+  }
+}
+
+// Load logs on startup
+loadSessionLogs();
+
+// Enhanced feedback system with strategic moments
 const FEEDBACK_MESSAGES = {
-  outline: [
-    "Great job starting the face outline!",
-    "Perfect! You're drawing the face shape beautifully!",
-    "Excellent! The face outline is looking great!"
-  ],
-  hair: [
-    "Wow! You're adding beautiful hair!",
-    "Fantastic! The hair is looking so nice!",
-    "Amazing! You're creating wonderful hair!"
-  ],
-  eye_left: [
-    "Great! You're drawing the left eye!",
-    "Perfect! The left eye is looking good!",
-    "Excellent! You're adding the left eye!"
-  ],
-  eye_right: [
-    "Wonderful! Now the right eye!",
-    "Fantastic! Both eyes are looking great!",
-    "Amazing! You're giving the face eyes to see!"
-  ],
-  nose: [
-    "Perfect! You're adding a cute nose!",
-    "Great! The nose is looking wonderful!",
-    "Excellent! You're creating a nice nose!"
-  ],
-  smile: [
-    "Beautiful! You're adding a happy smile!",
-    "Wonderful! The face is looking so happy!",
-    "Perfect! You've created a lovely smile!"
-  ],
-  completion: [
-    "Congratulations! You've completed the whole face!",
-    "Amazing work! The face looks perfect!",
-    "Fantastic job! You've drawn a beautiful face!"
-  ]
+  start: {
+    smiley: [
+      "Great start! You're beginning to draw a happy smiley face!",
+      "Excellent! You've started creating a wonderful smiley face!",
+      "Perfect beginning! Your smiley face is taking shape!"
+    ],
+    child: [
+      "Wonderful start! You're beginning to draw a cute child's face!",
+      "Excellent! You've started creating a beautiful child's face!",
+      "Perfect beginning! Your child's face is taking shape!"
+    ],
+    hero: [
+      "Amazing start! You're beginning to draw a superhero mask!",
+      "Excellent! You've started creating an awesome superhero mask!",
+      "Perfect beginning! Your superhero mask is taking shape!"
+    ]
+  },
+  middle: {
+    smiley: [
+      "You're halfway there! The smiley face is looking great!",
+      "Keep going! You're doing an amazing job with the smiley face!",
+      "Fantastic progress! The smiley face is really coming together!"
+    ],
+    child: [
+      "You're halfway there! The child's face is looking wonderful!",
+      "Keep going! You're doing an amazing job with the child's face!",
+      "Fantastic progress! The child's face is really coming together!"
+    ],
+    hero: [
+      "You're halfway there! The superhero mask is looking awesome!",
+      "Keep going! You're doing an amazing job with the superhero mask!",
+      "Fantastic progress! The superhero mask is really coming together!"
+    ]
+  },
+  completion: {
+    smiley: [
+      "Congratulations! You've completed a beautiful smiley face!",
+      "Amazing work! Your smiley face looks perfect and happy!",
+      "Fantastic job! You've created a wonderful smiley face!"
+    ],
+    child: [
+      "Congratulations! You've completed a beautiful child's face!",
+      "Amazing work! Your child's face looks perfect and cute!",
+      "Fantastic job! You've created a wonderful child's face!"
+    ],
+    hero: [
+      "Congratulations! You've completed an awesome superhero mask!",
+      "Amazing work! Your superhero mask looks perfect and powerful!",
+      "Fantastic job! You've created an incredible superhero mask!"
+    ]
+  }
 };
 
 app.get('/api/feedback', (req, res) => {
-  const { feature, progress, total } = req.query;
+  const { feedbackType, template } = req.query;
   
   let messages;
-  if (feature && FEEDBACK_MESSAGES[feature]) {
-    messages = FEEDBACK_MESSAGES[feature];
-  } else if (progress && total && parseInt(progress) >= parseInt(total)) {
-    messages = FEEDBACK_MESSAGES.completion;
+  if (feedbackType && FEEDBACK_MESSAGES[feedbackType]) {
+    if (template && FEEDBACK_MESSAGES[feedbackType][template]) {
+      messages = FEEDBACK_MESSAGES[feedbackType][template];
+    } else {
+      // Fallback to child template if template not found
+      messages = FEEDBACK_MESSAGES[feedbackType].child;
+    }
   } else {
+    // Fallback messages
     messages = ["Great job!", "Keep going!", "You're doing amazing!"];
   }
   
@@ -86,6 +148,9 @@ app.post('/api/log-session', (req, res) => {
   
   sessionLogs.push(sessionLog);
   console.log('Session logged:', sessionLog);
+  
+  // Save to file after each new session
+  saveSessionLogs();
   
   res.json({ success: true, sessionId: sessionLog.id });
 });
@@ -133,7 +198,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'wireframe_mockup.html'));
 });
 
+// Serve the admin dashboard
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`App available at: http://localhost:${PORT}/wireframe_mockup.html?template=child&token=b7f3e2c1-9a4d-4e2b-8c1a-2f3d4e5b6a7c`);
+  console.log(`Session logs stored in: ${LOGS_FILE}`);
 }); 

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kids_VanG Admin Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 300;
+    }
+    
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid #667eea;
+    }
+    
+    .stat-card h3 {
+      color: #666;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-card .value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #333;
+    }
+    
+    .stat-card .unit {
+      font-size: 1rem;
+      color: #666;
+      margin-left: 0.5rem;
+    }
+    
+    .template-usage {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    
+    .template-usage h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+      font-size: 1.5rem;
+    }
+    
+    .template-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .template-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .template-name {
+      min-width: 120px;
+      font-weight: 500;
+    }
+    
+    .template-count {
+      min-width: 60px;
+      text-align: right;
+      color: #666;
+    }
+    
+    .template-progress {
+      flex: 1;
+      height: 8px;
+      background: #e1e5e9;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .template-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    
+    .recent-sessions {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .recent-sessions h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+      font-size: 1.5rem;
+    }
+    
+    .session-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .session-table th,
+    .session-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e1e5e9;
+    }
+    
+    .session-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #666;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .session-table tr:hover {
+      background: #f8f9fa;
+    }
+    
+    .completion-rate {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    
+    .completion-rate.high {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .completion-rate.medium {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .completion-rate.low {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #666;
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    
+    .refresh-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      transition: background 0.2s ease;
+    }
+    
+    .refresh-btn:hover {
+      background: #5a6fd8;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .session-table {
+        font-size: 0.9rem;
+      }
+      
+      .session-table th,
+      .session-table td {
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Kids_VanG Admin Dashboard</h1>
+    <p>Session Analytics & Usage Statistics</p>
+  </div>
+  
+  <div class="container">
+    <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh Data</button>
+    
+    <div id="loading" class="loading">
+      Loading analytics...
+    </div>
+    
+    <div id="error" class="error" style="display: none;"></div>
+    
+    <div id="content" style="display: none;">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Sessions</h3>
+          <div class="value" id="totalSessions">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>Average Completion Rate</h3>
+          <div class="value" id="avgCompletion">0<span class="unit">%</span></div>
+        </div>
+        <div class="stat-card">
+          <h3>Average Session Duration</h3>
+          <div class="value" id="avgDuration">0<span class="unit">sec</span></div>
+        </div>
+        <div class="stat-card">
+          <h3>Most Popular Template</h3>
+          <div class="value" id="popularTemplate">-</div>
+        </div>
+      </div>
+      
+      <div class="template-usage">
+        <h2>Template Usage</h2>
+        <div class="template-bars" id="templateBars">
+          <!-- Template bars will be populated here -->
+        </div>
+      </div>
+      
+      <div class="recent-sessions">
+        <h2>Recent Sessions</h2>
+        <table class="session-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Template</th>
+              <th>Duration</th>
+              <th>Dots</th>
+              <th>Undos</th>
+              <th>Completion</th>
+            </tr>
+          </thead>
+          <tbody id="recentSessions">
+            <!-- Recent sessions will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadAnalytics() {
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const content = document.getElementById('content');
+      
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      content.style.display = 'none';
+      
+      try {
+        const response = await fetch('/api/analytics');
+        const data = await response.json();
+        
+        // Update stats
+        document.getElementById('totalSessions').textContent = data.totalSessions;
+        document.getElementById('avgCompletion').textContent = data.avgCompletionRate;
+        document.getElementById('avgDuration').textContent = data.avgSessionDuration;
+        
+        // Find most popular template
+        const popularTemplate = Object.entries(data.templateUsage)
+          .sort(([,a], [,b]) => b - a)[0];
+        document.getElementById('popularTemplate').textContent = 
+          popularTemplate ? popularTemplate[0] : '-';
+        
+        // Update template usage bars
+        updateTemplateBars(data.templateUsage, data.totalSessions);
+        
+        // Update recent sessions
+        updateRecentSessions(data.recentSessions);
+        
+        loading.style.display = 'none';
+        content.style.display = 'block';
+        
+      } catch (err) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        error.textContent = `Error loading analytics: ${err.message}`;
+      }
+    }
+    
+    function updateTemplateBars(templateUsage, totalSessions) {
+      const container = document.getElementById('templateBars');
+      container.innerHTML = '';
+      
+      Object.entries(templateUsage)
+        .sort(([,a], [,b]) => b - a)
+        .forEach(([template, count]) => {
+          const percentage = totalSessions > 0 ? (count / totalSessions) * 100 : 0;
+          
+          const bar = document.createElement('div');
+          bar.className = 'template-bar';
+          bar.innerHTML = `
+            <div class="template-name">${template}</div>
+            <div class="template-count">${count}</div>
+            <div class="template-progress">
+              <div class="template-fill" style="width: ${percentage}%"></div>
+            </div>
+          `;
+          container.appendChild(bar);
+        });
+    }
+    
+    function updateRecentSessions(sessions) {
+      const tbody = document.getElementById('recentSessions');
+      tbody.innerHTML = '';
+      
+      sessions.reverse().forEach(session => {
+        const row = document.createElement('tr');
+        const time = new Date(session.timestamp).toLocaleString();
+        const completionClass = session.completionRate >= 0.8 ? 'high' : 
+                               session.completionRate >= 0.5 ? 'medium' : 'low';
+        
+        row.innerHTML = `
+          <td>${time}</td>
+          <td>${session.template}</td>
+          <td>${session.sessionDuration}s</td>
+          <td>${session.completedDots}/${session.totalDots}</td>
+          <td>${session.undos}</td>
+          <td><span class="completion-rate ${completionClass}">${Math.round(session.completionRate * 100)}%</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    // Load analytics on page load
+    loadAnalytics();
+    
+    // Auto-refresh every 30 seconds
+    setInterval(loadAnalytics, 30000);
+  </script>
+</body>
+</html> 

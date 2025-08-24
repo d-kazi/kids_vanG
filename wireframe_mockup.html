@@ -94,6 +94,7 @@
       <option value="hero">Superhero Mask</option>
     </select>
     <button id="undo-btn">Undo</button>
+    <button id="reset-btn">Reset</button>
     <span class="progress">0 of 10 dots</span>
   </div>
   <div class="canvas-container">
@@ -105,6 +106,7 @@
     const ctx = canvas.getContext('2d');
     const progressEl = document.querySelector('.progress');
     const undoBtn = document.getElementById('undo-btn');
+    const resetBtn = document.getElementById('reset-btn');
     const templateSelect = document.getElementById('template-select');
     let dotTemplate = null;
     let visited = [];
@@ -120,16 +122,35 @@
     let sessionStartTime = Date.now();
     let undoCount = 0;
     let completedFeatures = {};
+    let currentTemplate = 'child'; // Track current template for voice feedback
 
     // --- Feature Order ---
-    const FEATURE_ORDER = ["outline", "hair", "eye_left", "eye_right", "nose", "smile"];
+    let FEATURE_ORDER = ["outline", "hair", "eye_left", "eye_right", "nose", "smile"];
     let currentFeatureIdx = 0;
     let visitedByFeature = {};
+
+    function getFeatureOrder(templateName) {
+      if (templateName === 'smiley') {
+        return ["outline", "eye_left", "eye_right", "smile"];
+      } else if (templateName === 'child') {
+        return ["outline", "hair", "eye_left", "eye_right", "nose", "smile", "blush_left", "blush_right"];
+      } else if (templateName === 'hero') {
+        return ["mask_red", "eye_left", "eye_right", "web_center", "web_left", "web_right", "web_top_left", "web_top_right"];
+      }
+      return ["outline", "hair", "eye_left", "eye_right", "nose", "smile"];
+    }
 
     function resetProgress() {
       console.log("resetProgress called");
       currentFeatureIdx = 0;
       visitedByFeature = {};
+      completedFeatures = {};
+      undoCount = 0;
+      sessionStartTime = Date.now();
+      isAnimating = false;
+      // Reset voice feedback flags for new template
+      hasSpokenAtStart = false;
+      hasSpokenAtMiddle = false;
       if (dotTemplate && dotTemplate.features) {
         FEATURE_ORDER.forEach(f => {
           if (dotTemplate.features[f]) visitedByFeature[f] = [];
@@ -187,12 +208,16 @@
           } else if (i === highlightIdx) {
             color = '#ff3b3b'; // next
             radius = NEXT_DOT_RADIUS;
+          } else if (visitedArr.length === 0 && i === 0) {
+            color = '#ff6b6b'; // starting point - bright red
+            radius = NEXT_DOT_RADIUS;
           } else {
             color = '#bbb';
             radius = FUTURE_DOT_RADIUS;
           }
-          ctx.shadowColor = (i === highlightIdx) ? '#ffb347' : 'transparent';
-          ctx.shadowBlur = (i === highlightIdx) ? 6 : 0;
+          ctx.shadowColor = (i === highlightIdx) ? '#ffb347' : 
+                           (visitedArr.length === 0 && i === 0) ? '#ff6b6b' : 'transparent';
+          ctx.shadowBlur = (i === highlightIdx || (visitedArr.length === 0 && i === 0)) ? 8 : 0;
         } else {
           // Static feature logic: always gray, small, no numbers, no highlights
           color = '#bbb';
@@ -216,6 +241,566 @@
       });
     }
 
+    // --- Animation State ---
+    let isAnimating = false;
+    let animationProgress = 0;
+    let animationStartTime = 0;
+    const ANIMATION_DURATION = 2000; // 2 seconds
+
+    // --- Animation Functions ---
+    function startEmojiAnimation() {
+      if (isAnimating) return;
+      isAnimating = true;
+      animationProgress = 0;
+      animationStartTime = Date.now();
+      animateEmoji();
+    }
+
+    function animateEmoji() {
+      if (!isAnimating) return;
+      
+      const elapsed = Date.now() - animationStartTime;
+      animationProgress = Math.min(elapsed / ANIMATION_DURATION, 1);
+      
+      // Easing function for smooth animation
+      const easeOut = 1 - Math.pow(1 - animationProgress, 3);
+      
+      drawWithAnimation(easeOut);
+      
+      if (animationProgress < 1) {
+        requestAnimationFrame(animateEmoji);
+      } else {
+        isAnimating = false;
+        // Keep the final emoji state
+        drawFinalEmoji();
+      }
+    }
+
+    function drawWithAnimation(progress) {
+      const [w, h] = getCanvasSize();
+      canvas.width = w;
+      canvas.height = h;
+      ctx.clearRect(0, 0, w, h);
+      
+      if (!dotTemplate || !dotTemplate.features) return;
+
+      // Draw animated features based on template
+      if (dotTemplate.name === 'smiley') {
+        drawAnimatedOutline(w, h, progress);
+        drawAnimatedEyes(w, h, progress);
+        drawAnimatedSmile(w, h, progress);
+      } else if (dotTemplate.name === 'child') {
+        drawAnimatedChildOutline(w, h, progress);
+        drawAnimatedChildHair(w, h, progress);
+        drawAnimatedChildEyes(w, h, progress);
+        drawAnimatedChildNose(w, h, progress);
+        drawAnimatedChildSmile(w, h, progress);
+        drawAnimatedChildBlush(w, h, progress);
+      } else if (dotTemplate.name === 'hero') {
+        drawAnimatedSpiderManMask(w, h, progress);
+        drawAnimatedSpiderManEyes(w, h, progress);
+        drawAnimatedSpiderManWebs(w, h, progress);
+      } else {
+        // Default animation for other templates
+        drawAnimatedOutline(w, h, progress);
+        drawAnimatedEyes(w, h, progress);
+        drawAnimatedSmile(w, h, progress);
+      }
+    }
+
+    function drawAnimatedOutline(w, h, progress) {
+      const dots = dotTemplate.features.outline;
+      if (!dots) return;
+      
+      // Animated fill
+      const fillProgress = Math.min(progress * 2, 1); // Fill completes in first half
+      if (fillProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+        
+        // Gradient fill
+        const gradient = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h/2);
+        gradient.addColorStop(0, '#FFD700'); // Bright yellow center
+        gradient.addColorStop(1, '#FFA500'); // Orange edges
+        
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = fillProgress;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      
+      // Animated stroke
+      const strokeProgress = Math.max(0, (progress - 0.5) * 2); // Stroke in second half
+      if (strokeProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+        
+        ctx.strokeStyle = '#FF8C00';
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = strokeProgress;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawAnimatedEyes(w, h, progress) {
+      const eyeProgress = Math.max(0, (progress - 0.3) * 1.4); // Eyes appear after 30%
+      
+      ['eye_left', 'eye_right'].forEach(eyeType => {
+        const dots = dotTemplate.features[eyeType];
+        if (!dots) return;
+        
+        // Eye fill
+        if (eyeProgress > 0) {
+          ctx.beginPath();
+          dots.forEach((dot, i) => {
+            const {x, y} = scaleDot(dot, w, h);
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          });
+          ctx.closePath();
+          
+          ctx.fillStyle = '#000000';
+          ctx.globalAlpha = eyeProgress;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        
+        // Eye sparkle effect
+        const sparkleProgress = Math.max(0, (progress - 0.8) * 5); // Sparkle at the end
+        if (sparkleProgress > 0) {
+          const centerX = dots.reduce((sum, dot) => sum + dot.x, 0) / dots.length;
+          const centerY = dots.reduce((sum, dot) => sum + dot.y, 0) / dots.length;
+          const {x, y} = scaleDot({x: centerX, y: centerY}, w, h);
+          
+          ctx.save();
+          ctx.globalAlpha = sparkleProgress;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(x - 2, y - 2, 1, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        }
+      });
+    }
+
+    function drawAnimatedSmile(w, h, progress) {
+      const dots = dotTemplate.features.smile;
+      if (!dots) return;
+      
+      const smileProgress = Math.max(0, (progress - 0.6) * 2.5); // Smile appears after 60%
+      
+      if (smileProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.globalAlpha = smileProgress;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawFinalEmoji() {
+      const [w, h] = getCanvasSize();
+      canvas.width = w;
+      canvas.height = h;
+      ctx.clearRect(0, 0, w, h);
+      
+      if (!dotTemplate || !dotTemplate.features) return;
+
+      // Final static image based on template
+      if (dotTemplate.name === 'smiley') {
+        drawAnimatedOutline(w, h, 1);
+        drawAnimatedEyes(w, h, 1);
+        drawAnimatedSmile(w, h, 1);
+      } else if (dotTemplate.name === 'child') {
+        drawAnimatedChildOutline(w, h, 1);
+        drawAnimatedChildHair(w, h, 1);
+        drawAnimatedChildEyes(w, h, 1);
+        drawAnimatedChildNose(w, h, 1);
+        drawAnimatedChildSmile(w, h, 1);
+        drawAnimatedChildBlush(w, h, 1);
+      } else if (dotTemplate.name === 'hero') {
+        drawAnimatedSpiderManMask(w, h, 1);
+        drawAnimatedSpiderManEyes(w, h, 1);
+        drawAnimatedSpiderManWebs(w, h, 1);
+      } else {
+        drawAnimatedOutline(w, h, 1);
+        drawAnimatedEyes(w, h, 1);
+        drawAnimatedSmile(w, h, 1);
+      }
+      
+      // Add celebration effect
+      addCelebrationEffect();
+    }
+
+    function addCelebrationEffect() {
+      // Add some floating particles
+      const particles = [];
+      for (let i = 0; i < 20; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: canvas.height + 10,
+          vx: (Math.random() - 0.5) * 4,
+          vy: -Math.random() * 8 - 2,
+          life: 1,
+          color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'][Math.floor(Math.random() * 4)]
+        });
+      }
+      
+      function animateParticles() {
+        ctx.save();
+        particles.forEach((particle, i) => {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.vy += 0.2; // gravity
+          particle.life -= 0.02;
+          
+          if (particle.life > 0) {
+            ctx.globalAlpha = particle.life;
+            ctx.fillStyle = particle.color;
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, 3, 0, 2 * Math.PI);
+            ctx.fill();
+          } else {
+            particles.splice(i, 1);
+          }
+        });
+        ctx.restore();
+        
+        if (particles.length > 0) {
+          requestAnimationFrame(animateParticles);
+        }
+      }
+      
+      animateParticles();
+    }
+
+    // --- Child Template Animation Functions ---
+    function drawAnimatedChildOutline(w, h, progress) {
+      const dots = dotTemplate.features.outline;
+      if (!dots) return;
+      
+      // Animated fill with human skin tone
+      const fillProgress = Math.min(progress * 2, 1);
+      if (fillProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+        
+        // Human skin tone gradient
+        const gradient = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h/2);
+        gradient.addColorStop(0, '#F5D0C5'); // Light beige center
+        gradient.addColorStop(1, '#E6B8A7'); // Slightly darker beige edges
+        
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = fillProgress;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      
+      // Animated stroke
+      const strokeProgress = Math.max(0, (progress - 0.5) * 2);
+      if (strokeProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+        
+        ctx.strokeStyle = '#D4A574';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = strokeProgress;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawAnimatedChildHair(w, h, progress) {
+      const dots = dotTemplate.features.hair;
+      if (!dots) return;
+      
+      const hairProgress = Math.max(0, (progress - 0.2) * 1.25);
+      
+      if (hairProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+        
+        // Brown hair gradient
+        const gradient = ctx.createLinearGradient(0, 0, w, 0);
+        gradient.addColorStop(0, '#8B4513'); // Saddle brown
+        gradient.addColorStop(0.5, '#A0522D'); // Sienna
+        gradient.addColorStop(1, '#8B4513'); // Saddle brown
+        
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = hairProgress;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawAnimatedChildEyes(w, h, progress) {
+      const eyeProgress = Math.max(0, (progress - 0.4) * 1.67);
+      
+      ['eye_left', 'eye_right'].forEach(eyeType => {
+        const dots = dotTemplate.features[eyeType];
+        if (!dots) return;
+        
+        if (eyeProgress > 0) {
+          ctx.beginPath();
+          dots.forEach((dot, i) => {
+            const {x, y} = scaleDot(dot, w, h);
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          });
+          ctx.closePath();
+          
+          ctx.fillStyle = '#2F4F4F'; // Dark slate gray for eyes
+          ctx.globalAlpha = eyeProgress;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      });
+    }
+
+    function drawAnimatedChildNose(w, h, progress) {
+      const dots = dotTemplate.features.nose;
+      if (!dots) return;
+      
+      const noseProgress = Math.max(0, (progress - 0.5) * 2);
+      
+      if (noseProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+        
+        ctx.fillStyle = '#D4A574';
+        ctx.globalAlpha = noseProgress;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawAnimatedChildSmile(w, h, progress) {
+      const dots = dotTemplate.features.smile;
+      if (!dots) return;
+      
+      const smileProgress = Math.max(0, (progress - 0.6) * 2.5);
+      
+      if (smileProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.globalAlpha = smileProgress;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawAnimatedChildBlush(w, h, progress) {
+      const blushProgress = Math.max(0, (progress - 0.7) * 3.33);
+      
+      ['blush_left', 'blush_right'].forEach(blushType => {
+        const dots = dotTemplate.features[blushType];
+        if (!dots) return;
+        
+        if (blushProgress > 0) {
+          ctx.beginPath();
+          dots.forEach((dot, i) => {
+            const {x, y} = scaleDot(dot, w, h);
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          });
+          ctx.closePath();
+          
+          // Soft pink blush
+          ctx.fillStyle = '#FFB6C1';
+          ctx.globalAlpha = blushProgress * 0.6;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      });
+    }
+
+    // --- Spider-Man Animation Functions ---
+    function drawAnimatedSpiderManMask(w, h, progress) {
+      const dots = dotTemplate.features.mask_red;
+      if (!dots) return;
+      
+      // Animated fill with Spider-Man red
+      const fillProgress = Math.min(progress * 2, 1);
+      if (fillProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+        
+        // Spider-Man red gradient
+        const gradient = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h/2);
+        gradient.addColorStop(0, '#FF0000'); // Bright red center
+        gradient.addColorStop(1, '#CC0000'); // Darker red edges
+        
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = fillProgress;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      
+      // Animated stroke
+      const strokeProgress = Math.max(0, (progress - 0.5) * 2);
+      if (strokeProgress > 0) {
+        ctx.beginPath();
+        dots.forEach((dot, i) => {
+          const {x, y} = scaleDot(dot, w, h);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.closePath();
+        
+        ctx.strokeStyle = '#990000';
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = strokeProgress;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawAnimatedSpiderManEyes(w, h, progress) {
+      const eyeProgress = Math.max(0, (progress - 0.3) * 1.4);
+      
+      ['eye_left', 'eye_right'].forEach(eyeType => {
+        const dots = dotTemplate.features[eyeType];
+        if (!dots) return;
+        
+        if (eyeProgress > 0) {
+          ctx.beginPath();
+          dots.forEach((dot, i) => {
+            const {x, y} = scaleDot(dot, w, h);
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          });
+          ctx.closePath();
+          
+          ctx.fillStyle = '#000000'; // Black eyes
+          ctx.globalAlpha = eyeProgress;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      });
+    }
+
+    function drawAnimatedSpiderManWebs(w, h, progress) {
+      const webProgress = Math.max(0, (progress - 0.5) * 2);
+      
+      ['web_center', 'web_left', 'web_right', 'web_top_left', 'web_top_right'].forEach(webType => {
+        const dots = dotTemplate.features[webType];
+        if (!dots) return;
+        
+        if (webProgress > 0) {
+          ctx.beginPath();
+          dots.forEach((dot, i) => {
+            const {x, y} = scaleDot(dot, w, h);
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          });
+          
+          ctx.strokeStyle = '#FFFFFF'; // White webs
+          ctx.lineWidth = 2;
+          ctx.lineCap = 'round';
+          ctx.globalAlpha = webProgress;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      });
+    }
+
     // --- Drawing ---
     function draw() {
       const [w, h] = getCanvasSize();
@@ -227,19 +812,21 @@
       FEATURE_ORDER.forEach((feature, idx) => {
         const dots = dotTemplate.features[feature];
         if (!dots) return;
-        const isOutline = feature === 'outline';
+        const isOutline = feature === 'outline' || feature === 'mask_red';
+        const isEye = feature === 'eye_left' || feature === 'eye_right';
         if (idx < currentFeatureIdx) {
           // Previous features: all dots completed and connected
           const allVisited = Array.from({length: dots.length}, (_, i) => i);
-          drawFeatureDots(dots, true, -1, allVisited, isOutline);
+          drawFeatureDots(dots, true, -1, allVisited, (isOutline || isEye) && allVisited.length === dots.length);
         } else if (idx === currentFeatureIdx) {
           // Current feature: show progress and highlight next dot
+          const visited = visitedByFeature[feature] || [];
           drawFeatureDots(
             dots,
             true,
-            visitedByFeature[feature].length,
-            visitedByFeature[feature],
-            isOutline
+            visited.length,
+            visited,
+            (isOutline || isEye) && visited.length === dots.length
           );
         } else {
           // Future features: gray dots only
@@ -255,20 +842,58 @@
     }
 
     // --- Voice Feedback ---
-    async function getFeedbackAndSpeak(currentFeature = null) {
+    let hasSpokenAtStart = false;
+    let hasSpokenAtMiddle = false;
+    
+    function shouldSpeakNow() {
+      const completedCount = Object.keys(completedFeatures).length;
+      const totalFeatures = FEATURE_ORDER.length;
+      
+      // Step 1: First feature completed (but only if we haven't spoken at start yet)
+      if (completedCount === 1 && !hasSpokenAtStart) {
+        hasSpokenAtStart = true;
+        return 'start';
+      }
+      
+      // Middle: Halfway through (but only if we haven't spoken at middle yet)
+      const middlePoint = Math.ceil(totalFeatures / 2);
+      if (completedCount === middlePoint && !hasSpokenAtMiddle) {
+        hasSpokenAtMiddle = true;
+        return 'middle';
+      }
+      
+      // End: All features completed
+      if (completedCount === totalFeatures) {
+        return 'end';
+      }
+      
+      return null;
+    }
+    
+    async function getFeedbackAndSpeak(moment = null) {
       try {
-        // Use passed feature or fall back to current feature
-        const activeFeature = currentFeature || FEATURE_ORDER[currentFeatureIdx];
-        const activeDots = dotTemplate.features[activeFeature] || [];
-        const activeVisited = visitedByFeature[activeFeature] || [];
+        // Determine the moment if not provided
+        const speakMoment = moment || shouldSpeakNow();
+        
+        if (!speakMoment) return; // Don't speak if it's not a strategic moment
+        
+        let feedbackType;
+        if (speakMoment === 'start') {
+          feedbackType = 'start';
+        } else if (speakMoment === 'middle') {
+          feedbackType = 'middle';
+        } else if (speakMoment === 'end') {
+          feedbackType = 'completion';
+        } else {
+          return; // Unknown moment
+        }
         
         const params = new URLSearchParams({
-          feature: activeFeature,
-          progress: activeVisited.length,
-          total: activeDots.length
+          feedbackType: feedbackType,
+          template: currentTemplate || 'child'
         });
         
-        const resp = await fetch(`http://localhost:3000/api/feedback?${params}`);
+        const resp = await fetch(`/api/feedback?${params}`);
         const data = await resp.json();
         if (data.text) {
           const utter = new window.SpeechSynthesisUtterance(data.text);
@@ -310,14 +935,17 @@
         // Move to next feature if done
         if (visited.length > 0 && visited.length === dots.length) {
           completedFeatures[feature] = true;
-          // Give feedback only when feature is completed
-          getFeedbackAndSpeak(feature);
+          // Check if we should speak at this strategic moment
+          getFeedbackAndSpeak();
           if (currentFeatureIdx < FEATURE_ORDER.length - 1) {
             currentFeatureIdx++;
             draw();
           } else {
-            // All features completed - log session
+            // All features completed - start emoji animation
             logSession();
+            setTimeout(() => {
+              startEmojiAnimation();
+            }, 500); // Small delay to let user see completion
           }
         }
       } else {
@@ -359,7 +987,7 @@
           features: completedFeatures
         };
         
-        await fetch('http://localhost:3000/api/log-session', {
+        await fetch('/api/log-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(sessionData)
@@ -381,6 +1009,8 @@
       console.log("loadTemplate called with", name);
       const resp = await fetch(`templates/${name}.json`);
       dotTemplate = await resp.json();
+      currentTemplate = name; // Update current template
+      FEATURE_ORDER = getFeatureOrder(name);
       resetProgress();
       draw();
     }
@@ -404,6 +1034,10 @@
     canvas.addEventListener('click', handleTap);
     canvas.addEventListener('touchstart', handleTap);
     undoBtn.addEventListener('click', handleUndo);
+    resetBtn.addEventListener('click', () => {
+      resetProgress();
+      draw();
+    });
     templateSelect.addEventListener('change', (e) => {
       loadTemplate(e.target.value);
     });
