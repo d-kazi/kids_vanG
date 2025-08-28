@@ -132,12 +132,15 @@ app.get('/api/feedback', (req, res) => {
 
 // Session logging endpoint
 app.post('/api/log-session', (req, res) => {
-  const { template, totalDots, completedDots, sessionDuration, undos, features } = req.body;
+  const { template, stage, difficulty, guideType, totalDots, completedDots, sessionDuration, undos, features } = req.body;
   
   const sessionLog = {
     id: Date.now().toString(),
     timestamp: new Date().toISOString(),
     template,
+    stage: typeof stage === 'number' ? stage : undefined,
+    difficulty: typeof difficulty === 'number' ? difficulty : undefined,
+    guideType: typeof guideType === 'string' ? guideType : undefined,
     totalDots,
     completedDots,
     sessionDuration, // in seconds
@@ -161,9 +164,13 @@ app.get('/api/analytics', (req, res) => {
   const avgCompletionRate = sessionLogs.reduce((sum, log) => sum + log.completionRate, 0) / totalSessions || 0;
   const avgSessionDuration = sessionLogs.reduce((sum, log) => sum + log.sessionDuration, 0) / totalSessions || 0;
   const templateUsage = {};
+  const stageUsage = {};
+  const difficultyUsage = {};
   
   sessionLogs.forEach(log => {
     templateUsage[log.template] = (templateUsage[log.template] || 0) + 1;
+    if (typeof log.stage === 'number') stageUsage[log.stage] = (stageUsage[log.stage] || 0) + 1;
+    if (typeof log.difficulty === 'number') difficultyUsage[log.difficulty] = (difficultyUsage[log.difficulty] || 0) + 1;
   });
   
   res.json({
@@ -171,6 +178,8 @@ app.get('/api/analytics', (req, res) => {
     avgCompletionRate: Math.round(avgCompletionRate * 100),
     avgSessionDuration: Math.round(avgSessionDuration),
     templateUsage,
+    stageUsage,
+    difficultyUsage,
     recentSessions: sessionLogs.slice(-10) // Last 10 sessions
   });
 });

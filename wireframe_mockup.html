@@ -109,6 +109,8 @@
     const resetBtn = document.getElementById('reset-btn');
     const templateSelect = document.getElementById('template-select');
     let dotTemplate = null;
+    let contentManifest = null;
+    let currentMeta = { stage: 1, difficulty: 1, guideType: 'dots' };
     let visited = [];
     let currentDot = 0;
     let lines = [];
@@ -128,6 +130,10 @@
     let FEATURE_ORDER = ["outline", "hair", "eye_left", "eye_right", "nose", "smile"];
     let currentFeatureIdx = 0;
     let visitedByFeature = {};
+    let visitedTraceByFeature = {}; // sequential counter (legacy)
+    let visitedTraceSetByFeature = {}; // set of visited guide points (order-independent)
+    let tracingActive = false;
+    let userPathByFeature = {}; // freehand user stroke per feature in trace mode (scaled 0..1)
 
     function getFeatureOrder(templateName) {
       if (templateName === 'smiley') {
@@ -154,6 +160,9 @@
       if (dotTemplate && dotTemplate.features) {
         FEATURE_ORDER.forEach(f => {
           if (dotTemplate.features[f]) visitedByFeature[f] = [];
+          if (dotTemplate.features[f]) visitedTraceByFeature[f] = 0;
+          if (dotTemplate.features[f]) visitedTraceSetByFeature[f] = new Set();
+          if (dotTemplate.features[f]) userPathByFeature[f] = [];
         });
       }
     }
@@ -239,6 +248,92 @@
           ctx.fillText(i+1, x, y);
         }
       });
+    }
+
+    // --- Trace-over Helpers (Stage 2) ---
+    function buildTracePoints(rawDots, segmentStep = 0.2) {
+      // Generate intermediate points along each segment between raw dots
+      const points = [];
+      for (let i = 1; i < rawDots.length; i++) {
+        const a = rawDots[i-1];
+        const b = rawDots[i];
+        for (let t = 0; t < 1; t += segmentStep) {
+          points.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+        }
+      }
+      // include final endpoints
+      points.push(rawDots[rawDots.length - 1]);
+      return points;
+    }
+
+    function drawTraceGuide(points, visitedCount) {
+      const [w, h] = getCanvasSize();
+      // Highlight all guide dots in one color (red)
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const { x, y } = scaleDot(p, w, h);
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff3b3b';
+        ctx.fill();
+      }
+
+      // Draw user's freehand stroke if present
+      const feature = FEATURE_ORDER[currentFeatureIdx];
+      const path = userPathByFeature[feature] || [];
+      if (path.length > 1) {
+        ctx.beginPath();
+        ctx.strokeStyle = getFeatureStyle(currentTemplate, feature).stroke;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        for (let i = 0; i < path.length; i++) {
+          const p = path[i];
+          const { x, y } = scaleDot(p, w, h);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    function getFeatureStyle(template, feature) {
+      // Default styles
+      const defaults = { stroke: '#4a90e2' };
+      if (template === 'child') {
+        const map = {
+          outline: { stroke: '#D4A574' },
+          hair: { stroke: '#8B4513' },
+          eye_left: { stroke: '#2F4F4F' },
+          eye_right: { stroke: '#2F4F4F' },
+          nose: { stroke: '#D4A574' },
+          smile: { stroke: '#8B4513' },
+          blush_left: { stroke: '#FFB6C1' },
+          blush_right: { stroke: '#FFB6C1' }
+        };
+        return map[feature] || defaults;
+      }
+      if (template === 'smiley') {
+        const map = {
+          outline: { stroke: '#FF8C00' },
+          eye_left: { stroke: '#000000' },
+          eye_right: { stroke: '#000000' },
+          smile: { stroke: '#000000' }
+        };
+        return map[feature] || defaults;
+      }
+      if (template === 'hero') {
+        const map = {
+          mask_red: { stroke: '#CC0000' },
+          eye_left: { stroke: '#000000' },
+          eye_right: { stroke: '#000000' },
+          web_center: { stroke: '#FFFFFF' },
+          web_left: { stroke: '#FFFFFF' },
+          web_right: { stroke: '#FFFFFF' },
+          web_top_left: { stroke: '#FFFFFF' },
+          web_top_right: { stroke: '#FFFFFF' }
+        };
+        return map[feature] || defaults;
+      }
+      return defaults;
     }
 
     // --- Animation State ---
@@ -815,19 +910,46 @@
         const isOutline = feature === 'outline' || feature === 'mask_red';
         const isEye = feature === 'eye_left' || feature === 'eye_right';
         if (idx < currentFeatureIdx) {
-          // Previous features: all dots completed and connected
-          const allVisited = Array.from({length: dots.length}, (_, i) => i);
-          drawFeatureDots(dots, true, -1, allVisited, (isOutline || isEye) && allVisited.length === dots.length);
+          // Previous features
+          if (currentMeta.guideType === 'trace') {
+            // Persist user's freehand drawing for completed features
+            const path = userPathByFeature[feature] || [];
+            if (path.length > 1) {
+              ctx.beginPath();
+              ctx.strokeStyle = getFeatureStyle(currentTemplate, feature).stroke;
+              ctx.lineWidth = 3;
+              ctx.lineCap = 'round';
+              for (let i = 0; i < path.length; i++) {
+                const p = path[i];
+                const { x, y } = scaleDot(p, w, h);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+              }
+              ctx.stroke();
+            } else {
+              // Fallback to faint guide if no path recorded
+              const tracePoints = buildTracePoints(dots);
+              drawTraceGuide(tracePoints, 0);
+            }
+          } else {
+            const allVisited = Array.from({length: dots.length}, (_, i) => i);
+            drawFeatureDots(dots, true, -1, allVisited, (isOutline || isEye) && allVisited.length === dots.length);
+          }
         } else if (idx === currentFeatureIdx) {
           // Current feature: show progress and highlight next dot
           const visited = visitedByFeature[feature] || [];
-          drawFeatureDots(
-            dots,
-            true,
-            visited.length,
-            visited,
-            (isOutline || isEye) && visited.length === dots.length
-          );
+          if (currentMeta.guideType === 'trace') {
+            const tracePoints = buildTracePoints(dots);
+            const count = visitedTraceByFeature[feature] || 0;
+            drawTraceGuide(tracePoints, count);
+          } else {
+            drawFeatureDots(
+              dots,
+              true,
+              visited.length,
+              visited,
+              (isOutline || isEye) && visited.length === dots.length
+            );
+          }
         } else {
           // Future features: gray dots only
           drawFeatureDots(dots, false, -1, [], false);
@@ -837,8 +959,14 @@
       // Progress
       const activeFeature = FEATURE_ORDER[currentFeatureIdx];
       const activeDots = dotTemplate.features[activeFeature] || [];
-      const activeVisited = visitedByFeature[activeFeature] || [];
-      progressEl.textContent = `Feature: ${activeFeature} (${activeVisited.length} of ${activeDots.length} dots)`;
+      if (currentMeta.guideType === 'trace') {
+        const tracePoints = buildTracePoints(activeDots);
+        const c = visitedTraceByFeature[activeFeature] || 0;
+        progressEl.textContent = `Trace: ${activeFeature} (${Math.min(c, tracePoints.length)} of ${tracePoints.length})`;
+      } else {
+        const activeVisited = visitedByFeature[activeFeature] || [];
+        progressEl.textContent = `Feature: ${activeFeature} (${activeVisited.length} of ${activeDots.length} dots)`;
+      }
     }
 
     // --- Voice Feedback ---
@@ -916,44 +1044,110 @@
 
       const feature = FEATURE_ORDER[currentFeatureIdx];
       const dots = dotTemplate.features[feature];
-      const visited = visitedByFeature[feature];
-      let nextIdx;
-      if (visited.length === dots.length) {
-        nextIdx = 0;
-      } else {
-        nextIdx = visited.length;
-      }
-      const nextDot = scaleDot(dots[nextIdx], w, h);
-      const dist = Math.hypot(x - nextDot.x, y - nextDot.y);
-      if (dist < TAP_RADIUS) {
+      if (currentMeta.guideType !== 'trace') {
+        const visited = visitedByFeature[feature];
+        let nextIdx;
         if (visited.length === dots.length) {
-          visited.push(0);
+          nextIdx = 0;
         } else {
-          visited.push(nextIdx);
+          nextIdx = visited.length;
         }
-        draw();
-        // Move to next feature if done
-        if (visited.length > 0 && visited.length === dots.length) {
-          completedFeatures[feature] = true;
-          // Check if we should speak at this strategic moment
-          getFeedbackAndSpeak();
-          if (currentFeatureIdx < FEATURE_ORDER.length - 1) {
-            currentFeatureIdx++;
-            draw();
+        const nextDot = scaleDot(dots[nextIdx], w, h);
+        const dist = Math.hypot(x - nextDot.x, y - nextDot.y);
+        if (dist < TAP_RADIUS) {
+          if (visited.length === dots.length) {
+            visited.push(0);
           } else {
-            // All features completed - start emoji animation
-            logSession();
-            setTimeout(() => {
-              startEmojiAnimation();
-            }, 500); // Small delay to let user see completion
+            visited.push(nextIdx);
           }
+          draw();
+          // Move to next feature if done
+          if (visited.length > 0 && visited.length === dots.length) {
+            completedFeatures[feature] = true;
+            // Check if we should speak at this strategic moment
+            getFeedbackAndSpeak();
+            if (currentFeatureIdx < FEATURE_ORDER.length - 1) {
+              currentFeatureIdx++;
+              draw();
+            } else {
+              // All features completed - start emoji animation
+              logSession();
+              setTimeout(() => {
+                startEmojiAnimation();
+              }, 500); // Small delay to let user see completion
+            }
+          }
+        } else {
+          canvas.style.transition = 'box-shadow 0.2s';
+          canvas.style.boxShadow = '0 0 12px 2px #ffb3b3';
+          setTimeout(() => { canvas.style.boxShadow = ''; }, 200);
         }
       } else {
-        canvas.style.transition = 'box-shadow 0.2s';
-        canvas.style.boxShadow = '0 0 12px 2px #ffb3b3';
-        setTimeout(() => { canvas.style.boxShadow = ''; }, 200);
+        // In trace mode, clicks are not the main interaction; begin a trace segment
+        beginTraceAt(x, y);
       }
     }
+
+    // --- Trace interaction (mouse/touch drag) ---
+    function beginTraceAt(px, py) {
+      tracingActive = true;
+      const [w, h] = getCanvasSize();
+      const feature = FEATURE_ORDER[currentFeatureIdx];
+      // Normalize to 0..1 space for storage
+      const nx = Math.max(0, Math.min(1, px / w));
+      const ny = Math.max(0, Math.min(1, py / h));
+      (userPathByFeature[feature] ||= []).push({ x: nx, y: ny });
+      updateTraceAt(px, py);
+    }
+
+    function updateTraceAt(px, py) {
+      if (!tracingActive) return;
+      const [w, h] = getCanvasSize();
+      const feature = FEATURE_ORDER[currentFeatureIdx];
+      const nx = Math.max(0, Math.min(1, px / w));
+      const ny = Math.max(0, Math.min(1, py / h));
+      (userPathByFeature[feature] ||= []).push({ x: nx, y: ny });
+
+      // Progress along trace points while within tolerance (handle fast moves)
+      const dots = dotTemplate.features[feature];
+      const tracePoints = buildTracePoints(dots);
+      const tolerance = TAP_RADIUS * 0.9;
+      const set = (visitedTraceSetByFeature[feature] ||= new Set());
+      for (let i = 0; i < tracePoints.length; i++) {
+        if (set.has(i)) continue;
+        const p = tracePoints[i];
+        const sx = p.x * w, sy = p.y * h;
+        const dist = Math.hypot(px - sx, py - sy);
+        if (dist < tolerance) set.add(i);
+      }
+      // Update legacy counter for compatibility with UI if used elsewhere
+      visitedTraceByFeature[feature] = set.size;
+
+      draw();
+    }
+
+    function endTrace() {
+      if (!tracingActive) return;
+      tracingActive = false;
+      // Only decide completion when the user lifts their finger/mouse
+      const feature = FEATURE_ORDER[currentFeatureIdx];
+      const dots = dotTemplate.features[feature];
+      const tracePoints = buildTracePoints(dots);
+      const set = (visitedTraceSetByFeature[feature] ||= new Set());
+      if (set.size >= tracePoints.length) {
+        completedFeatures[feature] = true;
+        getFeedbackAndSpeak();
+        if (currentFeatureIdx < FEATURE_ORDER.length - 1) {
+          currentFeatureIdx++;
+        } else {
+          logSession();
+          setTimeout(() => startEmojiAnimation(), 500);
+        }
+      }
+      draw();
+    }
+
+    // (Animated arrow removed per request)
 
     function handleUndo() {
       if (!dotTemplate || !dotTemplate.features) return;
@@ -980,6 +1174,9 @@
         
         const sessionData = {
           template: dotTemplate.name,
+          stage: currentMeta.stage,
+          difficulty: currentMeta.difficulty,
+          guideType: currentMeta.guideType,
           totalDots,
           completedDots,
           sessionDuration,
@@ -1002,11 +1199,23 @@
     // --- Template Loading ---
     function getTemplateFromQuery() {
       const params = new URLSearchParams(window.location.search);
-      return params.get('template') || 'smiley';
+      return params.get('template') || 'child';
     }
 
     async function loadTemplate(name) {
       console.log("loadTemplate called with", name);
+      if (!contentManifest) {
+        try {
+          const m = await fetch('templates/manifest.json');
+          contentManifest = await m.json();
+        } catch (e) {
+          console.warn('Manifest load failed, proceeding without metadata', e);
+        }
+      }
+      if (contentManifest && contentManifest.templates) {
+        const meta = contentManifest.templates.find(t => t.id === name);
+        if (meta) currentMeta = { stage: meta.stage, difficulty: meta.difficulty, guideType: meta.guideType };
+      }
       const resp = await fetch(`templates/${name}.json`);
       dotTemplate = await resp.json();
       currentTemplate = name; // Update current template
@@ -1031,8 +1240,32 @@
     }
 
     // --- Event Listeners ---
-    canvas.addEventListener('click', handleTap);
-    canvas.addEventListener('touchstart', handleTap);
+    canvas.addEventListener('click', (e) => {
+      // In trace mode, ignore click-only to avoid unintended strokes
+      if (currentMeta.guideType !== 'trace') handleTap(e);
+    });
+    canvas.addEventListener('touchstart', (e) => { handleTap(e); if (currentMeta.guideType === 'trace') { const rect = canvas.getBoundingClientRect(); const x = e.touches[0].clientX - rect.left; const y = e.touches[0].clientY - rect.top; beginTraceAt(x, y); }});
+    canvas.addEventListener('mousedown', (e) => {
+      if (currentMeta.guideType === 'trace' && e.button === 0) {
+        beginTraceAt(
+          e.clientX - canvas.getBoundingClientRect().left,
+          e.clientY - canvas.getBoundingClientRect().top
+        );
+      }
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (currentMeta.guideType === 'trace' && tracingActive && (e.buttons & 1) === 1) {
+        updateTraceAt(
+          e.clientX - canvas.getBoundingClientRect().left,
+          e.clientY - canvas.getBoundingClientRect().top
+        );
+      }
+    });
+    canvas.addEventListener('mouseup', endTrace);
+    document.addEventListener('mouseup', endTrace);
+    canvas.addEventListener('mouseleave', endTrace);
+    canvas.addEventListener('touchmove', (e) => { if (currentMeta.guideType === 'trace') { const rect = canvas.getBoundingClientRect(); const x = e.touches[0].clientX - rect.left; const y = e.touches[0].clientY - rect.top; updateTraceAt(x, y); }});
+    canvas.addEventListener('touchend', endTrace);
     undoBtn.addEventListener('click', handleUndo);
     resetBtn.addEventListener('click', () => {
       resetProgress();

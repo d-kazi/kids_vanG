@@ -1,0 +1,26 @@
+{
+  "templates": [
+    {
+      "id": "smiley",
+      "file": "smiley.json",
+      "stage": 1,
+      "difficulty": 1,
+      "guideType": "dots"
+    },
+    {
+      "id": "child",
+      "file": "child.json",
+      "stage": 2,
+      "difficulty": 2,
+      "guideType": "trace"
+    },
+    {
+      "id": "hero",
+      "file": "hero.json",
+      "stage": 3,
+      "difficulty": 3,
+      "guideType": "anchors"
+    }
+  ]
+}
+

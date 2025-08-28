@@ -62,6 +62,7 @@ With Cursor AI as your co‑pilot, you’ll “vibe‑code” each deliverable f
 
 ## For Further Work
 
+- See the expanded product roadmap in `PRD.md` for content ladder, stages, and gamification.
 - Refactor invite token storage and validation to use a secure backend or database instead of hardcoded values.
 - Implement email-based invite sending and management.
 - Add user authentication and session management for persistent access control.
@@ -69,4 +70,4 @@ With Cursor AI as your co‑pilot, you’ll “vibe‑code” each deliverable f
 - Add analytics and advanced logging for user engagement and performance.
 - Internationalization/localization for multi-language support.
 - Accessibility improvements for screen readers and keyboard navigation.
-- Responsive design enhancements for more device types. 
+- Responsive design enhancements for more device types.

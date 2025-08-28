@@ -282,6 +282,20 @@
           <!-- Template bars will be populated here -->
         </div>
       </div>
+
+      <div class="template-usage">
+        <h2>Stage Usage</h2>
+        <div class="template-bars" id="stageBars">
+          <!-- Stage bars will be populated here -->
+        </div>
+      </div>
+
+      <div class="template-usage">
+        <h2>Difficulty Usage</h2>
+        <div class="template-bars" id="difficultyBars">
+          <!-- Difficulty bars will be populated here -->
+        </div>
+      </div>
       
       <div class="recent-sessions">
         <h2>Recent Sessions</h2>
@@ -290,6 +304,8 @@
             <tr>
               <th>Time</th>
               <th>Template</th>
+              <th>Stage</th>
+              <th>Difficulty</th>
               <th>Duration</th>
               <th>Dots</th>
               <th>Undos</th>
@@ -331,6 +347,10 @@
         
         // Update template usage bars
         updateTemplateBars(data.templateUsage, data.totalSessions);
+
+        // Update stage and difficulty usage bars
+        updateGenericBars('stageBars', data.stageUsage || {}, data.totalSessions, 'Stage');
+        updateGenericBars('difficultyBars', data.difficultyUsage || {}, data.totalSessions, 'Level');
         
         // Update recent sessions
         updateRecentSessions(data.recentSessions);
@@ -380,6 +400,8 @@
         row.innerHTML = `
           <td>${time}</td>
           <td>${session.template}</td>
+          <td>${typeof session.stage === 'number' ? session.stage : '-'}</td>
+          <td>${typeof session.difficulty === 'number' ? session.difficulty : '-'}</td>
           <td>${session.sessionDuration}s</td>
           <td>${session.completedDots}/${session.totalDots}</td>
           <td>${session.undos}</td>
@@ -387,6 +409,31 @@
         `;
         tbody.appendChild(row);
       });
+    }
+
+    function updateGenericBars(containerId, usageMap, totalSessions, labelPrefix) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      const entries = Object.entries(usageMap);
+      if (entries.length === 0) {
+        container.innerHTML = '<div style="color:#666;">No data yet</div>';
+        return;
+      }
+      entries
+        .sort(([,a], [,b]) => b - a)
+        .forEach(([key, count]) => {
+          const percentage = totalSessions > 0 ? (count / totalSessions) * 100 : 0;
+          const bar = document.createElement('div');
+          bar.className = 'template-bar';
+          bar.innerHTML = `
+            <div class="template-name">${labelPrefix} ${key}</div>
+            <div class="template-count">${count}</div>
+            <div class="template-progress">
+              <div class="template-fill" style="width: ${percentage}%"></div>
+            </div>
+          `;
+          container.appendChild(bar);
+        });
     }
     
     // Load analytics on page load

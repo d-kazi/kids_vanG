@@ -77,6 +77,11 @@ kids_vanG/
 └── README.md             # This file
 ```
 
+## Product Requirements & Plans
+
+- PRD (roadmap and content ladder): [PRD.md](PRD.md)
+- Development plan to V1 (milestones & tasks): [DEVELOPMENT_PLAN_V1.md](DEVELOPMENT_PLAN_V1.md)
+
 ## API Endpoints
 
 - `GET /` - Main application
