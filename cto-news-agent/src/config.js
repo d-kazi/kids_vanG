@@ -93,9 +93,27 @@ const config = {
       ],
     },
     {
+      id: 'ai_latest',
+      label: 'AI & GENERATIVE AI',
+      emoji: '5.',
+      description: 'Latest in AI — foundation models, enterprise AI adoption, regulation, agentic AI, and breakthroughs',
+      newsApiQueries: [
+        'generative AI enterprise adoption',
+        'large language model GPT Claude Gemini',
+        'AI regulation governance policy',
+        'agentic AI autonomous agents',
+      ],
+      rssFeeds: [
+        'https://blog.google/technology/ai/rss/',
+        'https://openai.com/blog/rss/',
+        'https://techcrunch.com/category/artificial-intelligence/feed/',
+        'https://feeds.feedburner.com/nvabordblog',
+      ],
+    },
+    {
       id: 'gcc_saudi',
       label: 'GCC & SAUDI UPDATES',
-      emoji: '5.',
+      emoji: '6.',
       description: 'Vision 2030 digital, MCIT, SDAIA, NCA, regional govtech and fintech',
       newsApiQueries: [
         'Saudi Arabia Vision 2030 digital technology',

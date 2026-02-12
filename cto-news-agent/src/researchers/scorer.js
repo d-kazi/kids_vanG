@@ -18,6 +18,10 @@ const HIGH_VALUE_TERMS = [
   // Enterprise tech
   'cybersecurity', 'data platform', 'api', 'microservices', 'devops',
   'zero trust', 'sap', 'oracle', 'salesforce', 'servicenow',
+  // AI
+  'generative ai', 'large language model', 'llm', 'gpt', 'claude',
+  'gemini', 'copilot', 'agentic', 'foundation model', 'deepseek',
+  'openai', 'anthropic', 'nvidia', 'ai regulation', 'ai governance',
 ];
 
 const RECENCY_WEIGHT = 0.3;

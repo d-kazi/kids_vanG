@@ -15,8 +15,9 @@ The CTO needs a single, curated view of what matters each week across five domai
 | 1 | **IT Benchmarking** | What are peer IT organisations doing globally and in the GCC? New operating models, org structures, vendor deals, cloud migrations, AI/ML adoption benchmarks. |
 | 2 | **Social Insurance Tech** | What are other social insurance / social security bodies shipping? Digital services, fraud detection, claims automation, pension platforms, citizen portals. |
 | 3 | **Global Institutions** | Announcements, reports, and policy positions from ILO, IMF, World Bank, WEF, ISSA, OECD that affect social protection or digital government. |
-| 4 | **Key Tech News** | Major releases, vulnerabilities, market shifts (AI, cloud, cybersecurity, data platforms) relevant to a large enterprise CTO. |
-| 5 | **GCC / Saudi Specific** | Vision 2030 digital updates, MCIT / SDAIA announcements, NCA cybersecurity directives, regional fintech and govtech news. |
+| 4 | **Key Tech News** | Major releases, vulnerabilities, market shifts (cloud, cybersecurity, data platforms) relevant to a large enterprise CTO. |
+| 5 | **AI & Generative AI** | Latest in foundation models (GPT, Claude, Gemini, DeepSeek), enterprise AI adoption, agentic AI, AI regulation and governance, breakthroughs. |
+| 6 | **GCC / Saudi Specific** | Vision 2030 digital updates, MCIT / SDAIA announcements, NCA cybersecurity directives, regional fintech and govtech news. |
 
 Today this requires manual scanning of dozens of sources. The agent automates 90% of this effort.
 

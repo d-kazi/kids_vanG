@@ -89,6 +89,7 @@ describe('Formatter', () => {
       social_insurance_tech: [],
       global_institutions: [],
       key_tech_news: [],
+      ai_latest: [],
       gcc_saudi: [],
     };
 
