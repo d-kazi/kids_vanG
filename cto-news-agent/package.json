@@ -1,0 +1,23 @@
+{
+  "name": "gosi-cto-news-agent",
+  "version": "1.0.0",
+  "description": "Automated weekly intelligence briefing agent for the GOSI CTO",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "run-now": "node src/index.js --now",
+    "test": "node --test src/__tests__/agent.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "axios": "^1.7.0",
+    "node-cron": "^3.0.3",
+    "rss-parser": "^3.13.0",
+    "twilio": "^5.4.0",
+    "natural": "^8.0.1",
+    "dotenv": "^16.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
