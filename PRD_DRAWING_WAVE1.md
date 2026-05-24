@@ -185,4 +185,7 @@ and more closed."*
 - First buildable slice = Levels 1–3 (confirm) vs. including 4–5.
 - VO: pre-recorded voice talent vs. synthesized for Wave 1.
 - Minimum iOS version (17 vs. latest-only) and device list (which iPad).
-- Whether dot-to-dot ([`PRD.md`](PRD.md)) survives as an optional warm-up inside Track 1.
+
+> **Dot-to-dot:** kept as an **optional warm-up** inside Track 1, but **rebuilt on the new iOS
+> engine** and **de-prioritized** to a later wave (ships after the precision levels). See
+> [`PRD_DRAWING_DOMAIN.md`](PRD_DRAWING_DOMAIN.md) §6.

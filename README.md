@@ -85,6 +85,12 @@ kids_vanG/
 - PRD (legacy dot-to-dot ladder, superseded for iOS): [PRD.md](PRD.md)
 - Development plan to V1 (milestones & tasks): [DEVELOPMENT_PLAN_V1.md](DEVELOPMENT_PLAN_V1.md)
 
+## Native iOS (in progress)
+
+- `ios/DrawingEngine/` — the platform-agnostic Swift core for the Drawing domain (geometry, shape
+  fitting, precision scoring, "beat your best" progress, Wave 1 levels) with unit tests. Build/test
+  on a Mac with `swift test`. See [ios/DrawingEngine/README.md](ios/DrawingEngine/README.md).
+
 ## API Endpoints
 
 - `GET /` - Main application

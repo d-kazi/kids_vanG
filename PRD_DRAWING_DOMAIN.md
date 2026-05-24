@@ -102,7 +102,14 @@ ink engine. Full architecture lives in [`PRD_DRAWING_WAVE1.md`](PRD_DRAWING_WAVE
 - **Wave 2 (candidate):** Track 3 — Composition (the second skill the dad named), or deeper Track 1.
 - **Later:** Observation/Construction depth, Coloring polish, Detail; then the deferred tracks.
 
-## 6. Open items
+## 6. Dot-to-dot (optional warm-up, de-prioritized)
+
+The web prototype's dot-to-dot ladder ([`PRD.md`](PRD.md)) is **retained as an optional warm-up
+inside Track 1** (Precision) — a low-pressure way to settle the hand before precision challenges.
+Constraints: it must be **rebuilt on the new iOS engine** (§4), not ported from the web canvas, and
+it is **de-prioritized to a later wave** (after the precision levels ship). It is a warm-up, not the
+spine of the track.
+
+## 7. Open items
 - Confirm Wave 2 target (Composition vs. Construction/Accuracy).
 - Per-track level counts for first content batch.
-- Whether to keep dot-to-dot ([`PRD.md`](PRD.md)) as an optional warm-up inside Track 1.
