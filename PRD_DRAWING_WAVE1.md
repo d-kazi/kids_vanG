@@ -1,199 +1,188 @@
-# Drawing Domain — Wave 1 PRD: "Shape Builder"
+# Drawing Domain — Wave 1 PRD: Precision / Line Control ("Steady Hand")
 
 | | |
 |---|---|
-| **Parent doc** | [`PRD_iOS_APP.md`](PRD_iOS_APP.md) §5.2 (Drawing domain) |
+| **Parent docs** | [`PRD_iOS_APP.md`](PRD_iOS_APP.md) §5.2 · [`PRD_DRAWING_DOMAIN.md`](PRD_DRAWING_DOMAIN.md) (Track 1) |
 | **Wave** | 1 (first buildable slice of the Drawing domain) |
-| **Version** | 0.1 (Draft for review) |
+| **Version** | 0.2 (Draft for review) |
 | **Date** | 2026-05-24 |
 | **Status** | Draft — open items in §11 |
 | **Platform** | iOS native, **iPad-first**, **finger-first** input |
 | **Primary user** | Caspian (age 5) — design-partner persona |
 
-> **What this supersedes.** The web prototype's 5-stage dot-to-dot ladder ([`PRD.md`](PRD.md))
-> was built for a broad 3–6 range and a tap-the-dots mechanic. Wave 1 **reimagines** the
-> Drawing domain natively for iOS around a single, deeper level for a 5-year-old. Dot-to-dot
-> becomes an optional warm-up in a later wave, not the spine.
+> **What this is.** Wave 1 builds **Track 1 — Precision / Line & Stroke Control** from the Drawing
+> domain curriculum ([`PRD_DRAWING_DOMAIN.md`](PRD_DRAWING_DOMAIN.md)). It is the motor foundation:
+> teaching Caspian's hand to put an intended line exactly where he wants it, and to draw clean,
+> closed, repeatable shapes.
+>
+> **What changed from v0.1.** v0.1 used a "magic tidy" mechanic that morphed wobbly strokes into
+> clean ones. We dropped it: tidying *recognizes* clean for him but doesn't build *his* precision.
+> Wave 1 now uses **aim → compare → retry** — honest feedback and deliberate practice. Dot-to-dot
+> ([`PRD.md`](PRD.md)) is at most an optional warm-up, not the spine.
 
 ---
 
 ## 1. Who this is for (persona)
 
-**Caspian, age 5.** Current ability:
-- Draws basic shapes (circles, squares) but **inconsistently** (not round, not closed, uneven).
-- Can produce a **roughly recognizable** "painting" — you can tell what it is.
-- **Colors ~80%** of an object reasonably (not perfect, stays mostly in the area).
-
-**Where we want to take him:** drawing objects **more distinctly, clearly, and consistently** —
-clean, closed, well-proportioned shapes assembled into a recognizable object he's proud of.
+**Caspian, age 5.** Draws basic shapes (circles, squares) but **inconsistently** — not round, not
+closed, uneven sizes. Can produce a roughly recognizable picture; colors ~80% well. **Goal:** draw
+lines and shapes **accurately, precisely, and consistently** — the foundation everything else
+(construction, composition, detail) is built on.
 
 ---
 
 ## 2. The pedagogical bet
 
-A child who can already make rough shapes and rough pictures doesn't need more *tracing* — he
-needs to learn **construction** (objects are made of simple shapes) and to **internalize what
-"clean" looks like** by repeatedly comparing his own line to an ideal.
+Precision is a **motor skill**, and motor skills grow through **deliberate practice with honest
+feedback**, not through the app fixing the line for him. So Wave 1's job is to give Caspian a clear
+target, let him try, show him *exactly* how close he got and where he drifted, and invite him to
+**beat his own best**. Repetition + feedback + visible progress = real precision.
 
-Wave 1 teaches this with one mechanic loop:
-
-> **Build an object, one shape at a time → draw it raw with your finger → tap "✨ Tidy" and
-> watch your wobbly shape smoothly become a clean one → keep going → color it → celebrate.**
-
-This targets the three goals directly:
-- **Distinct / clear** — decomposition into shapes + clean tidy + coloring = a recognizable object.
-- **Consistent** — repeating the same primitive (circle, line…) across steps and objects, plus the
-  visual contrast between his raw line and the tidy ideal, builds his internal model. A gentle
-  **wobble meter** motivates closing the gap. Over sessions the tidy correction **fades** as his
-  raw shapes improve (scaffolding that recedes).
-
-No tests, no fail states. Effort is always rewarded; "tidy" is a delight, never a correction.
+> Teaching, not correcting. We never auto-tidy his line, never show a fail state, and never compare
+> him to other children — only to his own previous best.
 
 ---
 
-## 3. The level: "Shape Builder"
+## 3. The Wave 1 levels — "Steady Hand" (Track 1)
 
-### 3.1 Structure
-One level = guided construction of **one object** chosen from a small starter set. Wave 1 ships
-**3 starter objects**, ordered easy→harder by shape count:
+A small ladder of precision challenges. Each is a quick, replayable micro-game on the whiteboard.
 
-| Object | Shapes (ordered build steps) |
-|---|---|
-| **Cat** | big circle (head) → 2 triangles (ears) → oval (body) → small circles (eyes) → lines (whiskers) |
-| **Rocket** | tall oval/capsule (body) → triangle (nose) → 2 triangles (fins) → circle (window) → wavy lines (flames) |
-| **Flower** | circle (center) → 5 ovals (petals) → line (stem) → 2 ovals (leaves) |
+| # | Level | What it trains | Primary metrics |
+|---|---|---|---|
+| 1 | **Straight lines** — connect two points | aim + steadiness | closeness, jitter |
+| 2 | **Smooth curves / arcs** — follow an arc | smoothness, control | jitter, path closeness |
+| 3 | **Closed shapes** — circle, square, triangle | roundness/corners + **closure** + size | deviation, closure gap, size match |
+| 4 | **Repeatability** — draw the same shape 3× | **consistency across attempts** | cross-attempt variance |
+| 5 | **Control drills** — spirals, zigzags, waves | fine-motor control (fun) | path closeness, smoothness |
 
-Each object is **data, not code** (see §5.4), so adding more objects later costs no engineering.
+**Recommended first buildable slice:** Levels 1–3; Levels 4–5 fast-follow. (Open item §11.)
 
-### 3.2 The per-step loop (core gameplay)
-For each shape-step in the object:
-1. **Prompt (voice + visual).** Warm VO: *"Let's draw the cat's head — a big circle, right here!"*
-   A faint **ghost target** (where + how big) appears. Low text; the child needn't read.
-2. **Draw raw.** Child draws the shape freehand with a finger. Ink is buttery and whiteboard-clean.
-   His real, wobbly line is shown and respected.
-3. **Tidy moment.** Child taps the friendly **"✨ Tidy"** action. His stroke **morphs/animates**
-   (~0.4s, eased) from wobbly into the clean ideal of that shape, snapping into the construction.
-   A soft haptic + chime makes it satisfying.
-4. **Gentle consistency read.** A small **wobble meter** fills greener the closer his raw line was
-   to clean (roundness, closure, proportion). It motivates, never punishes — no numbers, no "wrong."
-5. **Advance.** The next shape's prompt appears; the object visibly assembles, step by step.
+### 3.1 The core loop — *aim → compare → retry*
+1. **Aim (prompt).** A faint **target** appears — the line/shape to produce — with warm voice cue
+   (*"Draw a line from the star to the moon!"*). Low text; he needn't read.
+2. **Draw.** He draws it freehand with his finger. Ink is buttery and whiteboard-clean; his real,
+   wobbly line is shown and respected (no snapping, no morphing).
+3. **Compare (honest overlay).** The app overlays his line against the ideal target and **highlights
+   where he drifted** (a gentle deviation heatmap / ghosted ideal path). A positive **precision
+   meter** fills based on how close he got — framed as encouragement, never "wrong."
+4. **Retry to beat your best.** He can immediately try again; the meter shows his **personal best**
+   to beat. Celebrate improvement (*"Rounder than last time!"*) with a soft haptic + chime.
+5. **Advance.** A gentle next-arrow moves to the next target/level when he's ready. No gate, no fail.
 
-### 3.3 Coloring (plays to his strength, builds clarity)
-After the object is assembled, a calm coloring step: a soft palette tray; **tap-to-fill** a region
-or brush within it. Fill is **forgiving** — because the engine knows the vector regions it built,
-color stays within the object even if his finger strays. Reinforces "clear, finished" objects.
+### 3.2 What makes it feel great
+- Whiteboard-clean canvas, near-zero chrome, instant ink.
+- The overlay is **specific and kind**: he sees *where* to improve, not just a number.
+- "Beat your best" turns repetition into a game he *wants* to replay.
 
-### 3.4 Reveal & reward
-The finished, distinct object animates to life and is saved to his **gallery ("the fridge")**.
-Stars (1–3) for: **completion**, **consistency improvement** vs. his own recent average, and
-**effort/persistence** — never for raw "accuracy" alone.
-
-### 3.5 Adaptive fading (across sessions)
-The engine tracks his per-shape consistency over time. As his raw shapes get cleaner, the **amount
-of "tidy" correction shrinks** (the ideal it morphs to stays closer to what he actually drew), so he
-gradually owns the clean line himself. Parent app surface: *"Caspian's circles are getting rounder."*
+### 3.3 Adaptive difficulty (within the track)
+Tighten tolerances, lengthen/curve targets, and raise the "best" bar as his precision improves;
+loosen if he struggles. Tracks his per-shape precision over time; as raw shapes get cleaner, targets
+get more demanding (the scaffold recedes by getting *harder*, not by doing the work for him).
 
 ---
 
 ## 4. iOS engine architecture (clean, whiteboard, frictionless)
 
-Design intent: a near-empty white canvas, one soft floating toolbar, generous margins for small
-hands — and ink so low-latency it feels like a real whiteboard. The guided "tidy" mechanic **requires
-access to the raw stroke points**, so the core is a **custom, GPU-backed ink engine** (not PencilKit,
-which doesn't expose mid-stroke geometry for our morph/scoring).
+Design intent unchanged from v0.1: a near-empty white canvas, one soft floating toolbar, generous
+margins for small hands, and ink so low-latency it feels like a real whiteboard. The custom,
+GPU-backed engine is retained; the geometry module is **repurposed for scoring + the comparison
+overlay** instead of morphing.
 
 ### 4.1 Stack
 - **Swift 6 / strict concurrency**, targeting the **latest iOS SDK** (minimum **iOS 17+**).
 - **SwiftUI** app shell; state via the **Observation** framework (`@Observable`, unidirectional/MVVM).
 - **Custom ink canvas:** a `UIViewRepresentable` wrapping an **`MTKView` (Metal)** render surface.
   - **Input:** `UITouch` with **coalesced** + **predicted** touches for minimum perceived latency.
-  - **Smoothing:** real-time **Catmull-Rom → Bézier** resampling of the point stream; soft constant
-    width for finger input.
+  - **Smoothing:** real-time **Catmull-Rom → Bézier** resampling; soft constant width for finger.
   - **Rendering:** Metal anti-aliased stroke tessellation at **ProMotion 120 Hz** via
     `CADisplayLink`/`MTKView`; point processing off the main thread.
-- **Scene layers (back→front):** paper-white background · ghost-guide layer · committed-ink layer ·
-  active-stroke layer · fill/coloring layer · celebration/confetti overlay.
-- **`ShapeFitter` (pure Swift, unit-tested):** fits a raw stroke to a **known target primitive**
-  (we prompted the shape, so we know the type):
-  - circle/ellipse → least-squares circle/ellipse fit
-  - line → linear regression
-  - rect/square → bounding-box + corner detection
-  - triangle → 3 dominant-corner detection
-  - returns **ideal geometry** + **consistency metrics** (normalized RMS deviation, closure gap,
-    aspect/size error) → drives the wobble meter, stars, and adaptive fading.
-- **Morph engine:** point-correspondence interpolation raw→ideal, `CADisplayLink`-driven, eased
-  (~0.4s); preserves his stroke color/width.
-- **Coloring:** region-aware fill over the vector regions the level constructed (forgiving, "in the
-  lines" by construction).
+- **Scene layers (back→front):** paper-white background · faint **target/guide** layer · committed-ink
+  layer · active-stroke layer · **comparison/diff-overlay** layer (deviation heatmap + ideal path) ·
+  precision-meter / celebration overlay.
+- **`ShapeFitter` (pure Swift, unit-tested) — repurposed for measurement:** fits the raw stroke to the
+  **known target primitive** and returns **precision metrics**, *not* a replacement stroke:
+  - line → linear regression; closeness + jitter
+  - circle/ellipse → least-squares fit; roundness, closure gap, size match
+  - rect/square, triangle → corner detection; corner quality, closure, size
+  - repeatability → variance across the attempt set
+  These drive the precision meter, "beat your best," stars, and adaptive difficulty.
+- **Comparison overlay renderer (new):** draws the ideal path and a color-coded deviation map of his
+  stroke vs. ideal. (**No morph engine in Wave 1** — removed from scope.)
 - **Audio:** warm, consistent VO (pre-recorded preferred; `AVSpeechSynthesizer` fallback) + SFX via
-  `AVAudioEngine`. **Haptics:** `CoreHaptics` for the tidy "snap."
-- **Persistence:** **SwiftData** (offline-first) for sessions, gallery, and per-shape skill estimates.
-- **Modularity:** a standalone Swift Package **`DrawingEngine`** (UI-agnostic core: stroke model,
-  `ShapeFitter`, scoring, level definitions) + the SwiftUI app target. Reusable across future domains.
+  `AVAudioEngine`. **Haptics:** `CoreHaptics` for the "beat your best" moment.
+- **Persistence:** **SwiftData** (offline-first) for attempts, personal bests, per-shape precision
+  estimates, and the gallery.
+- **Modularity:** standalone Swift Package **`DrawingEngine`** (UI-agnostic core: stroke model,
+  `ShapeFitter`, scoring, level definitions) + the SwiftUI app target. Reusable across all Drawing
+  tracks and the future Writing domain.
 
 ### 4.2 Experience budgets (frictionless)
 - Cold launch → drawable canvas **< 2 s**.
 - Input-to-ink latency **< 16 ms** (target **< 8 ms** on 120 Hz). Sustained **120 fps**.
-- **Zero text the child must read** to play; one-tap undo; **no fail states**; no menus/modals between
-  shapes.
+- **Zero text the child must read** to play; one-tap retry/undo; **no fail states**; no menus/modals.
 - **Aesthetic:** off-white canvas, no skeuomorphic clutter; a single floating soft-pill toolbar
-  showing at most **undo · ✨Tidy (when relevant) · color tray (coloring step) · gentle next-arrow**;
-  rounded, soft shadows, lots of negative space; calm palette; wide safe-area margins for palm rest.
+  showing at most **retry · undo · next-arrow** (plus the precision meter); rounded, soft shadows,
+  lots of negative space; calm palette; wide safe-area margins for palm rest.
 
 ### 4.3 Accessibility
-Large targets; VoiceOver labels on chrome; **reduced-motion** variant of the morph; color-blind-safe
-palette; sound on/off.
+Large targets; VoiceOver labels on chrome; **reduced-motion** overlay variant; color-blind-safe
+deviation colors; sound on/off.
 
 ---
 
 ## 5. Content & data model
 
 ### 5.1 Level definition (declarative)
-Each object is a typed/JSON definition: ordered `steps`, each with `shapeType`
-(circle | ellipse | line | rect | triangle | polyline), `targetGeometry` (position/size of the ghost
-guide, relative to canvas), `voicePrompt`, `colorRegions`, and `palette`. New objects = new data.
+Each level is a typed/JSON definition: `targetType` (line | arc | circle | ellipse | rect | triangle |
+spiral | zigzag | wave), `targetGeometry` (the ideal path/size, relative to canvas), `tolerances`
+(adaptive), `voicePrompt`, and `repeatCount` (for repeatability levels). New challenges = new data.
 
-### 5.2 Captured signals (feed measurement / parent app — see parent doc §5–8)
-Per shape: consistency metrics (roundness, closure, proportion), tidy-correction magnitude, attempts/
-undos, time. Per session: object completed, stars, consistency-vs-own-average trend, duration.
+### 5.2 Captured signals (feed measurement / parent app — parent doc §5–8)
+Per attempt: closeness (RMS deviation), smoothness/jitter, closure gap, size/proportion match;
+per repeatability set: cross-attempt variance. Per session: levels played, personal-best deltas
+(**improvement trend**), stars, duration. Parent surface: *"Caspian's circles are getting rounder
+and more closed."*
 
 ---
 
 ## 6. Acceptance criteria (Wave 1)
 - Canvas renders buttery, low-latency finger ink on iPad at 120 Hz, whiteboard-clean aesthetic.
-- All 3 starter objects are fully playable end-to-end: prompt → raw draw → tidy morph → assemble →
-  color → reveal/save to gallery.
-- `ShapeFitter` correctly fits and morphs circle, ellipse, line, triangle, rect to clean ideals; unit-
-  tested with fixtures.
-- Wobble meter + stars compute from real metrics; **no fail state** exists anywhere.
-- Adaptive fading reduces tidy-correction as logged consistency improves.
-- Plays fully **offline**; sessions + gallery persist locally (SwiftData).
+- Levels 1–3 fully playable end-to-end: aim → draw → honest comparison overlay → retry → beat-best.
+- `ShapeFitter` computes correct precision metrics (closeness, jitter, closure, size, variance) for
+  line, arc, circle, rect, triangle; unit-tested with fixtures.
+- Precision meter + stars reward **improvement vs. personal best**; **no fail state** anywhere; **no
+  morphing/auto-correction** of the child's stroke.
+- Adaptive difficulty raises/lowers tolerances and target demand from logged precision.
+- Plays fully **offline**; attempts, bests, and gallery persist locally (SwiftData).
 - Meets experience budgets (§4.2) and accessibility minimums (§4.3).
 
 ## 7. Success metrics
-- Caspian completes a full object **independently** (no adult help) in a session.
-- Measurable **upward trend in raw-shape consistency** over ~2–4 weeks (pre-tidy roundness/closure).
-- He **chooses to play again** (return sessions) and wants to color/keep results.
+- Caspian completes precision challenges **independently** (no adult help).
+- Measurable **upward trend in precision** over ~2–4 weeks (roundness/closure/closeness improving).
+- He **replays to beat his best** (engagement with the retry loop) and returns across sessions.
 
 ## 8. Out of scope for Wave 1
-- Free-draw-from-memory, dot-to-dot, ghost-fade stages (later waves).
+- Other Drawing tracks: Construction/Accuracy, Composition, Coloring, Detail (separate waves —
+  [`PRD_DRAWING_DOMAIN.md`](PRD_DRAWING_DOMAIN.md)).
 - Apple Pencil pressure/tilt (finger-first now; Pencil is a later enhancement).
-- The other domains (spatial/reading/writing), monetization, and cohort benchmarking.
+- Other domains (spatial/reading/writing), monetization, cohort benchmarking.
+- Stroke morphing / "magic tidy" (removed).
 
 ## 9. Roadmap after Wave 1
-- **Wave 2:** more objects (data only); reduce guides further; introduce "draw it yourself, then check."
-- **Wave 3:** free-draw challenge from a brief prompt; creativity rewards.
-- **Engine reuse:** the same custom canvas + fitter powers the **Writing** domain (letter formation).
+- **Wave 2 (candidate):** Composition track (the second skill named), or deeper Precision.
+- **Engine reuse:** the same custom canvas + `ShapeFitter` + overlay power Construction/Accuracy and
+  the **Writing** domain (letter formation: same "aim → compare → retry" against letter paths).
 
 ## 10. Build plan (when approved)
 1. `DrawingEngine` Swift Package: stroke model + Metal canvas spike (latency/smoothness proof).
-2. `ShapeFitter` + morph engine with unit tests.
-3. Level runner + 1 object (Cat) end-to-end; then data-drive Rocket + Flower.
-4. Coloring + gallery (SwiftData) + rewards + wobble meter.
-5. Adaptive fading + signal capture; accessibility + experience-budget pass.
+2. `ShapeFitter` precision-metrics + comparison-overlay renderer, with unit tests.
+3. Level runner + Level 1 (straight lines) end-to-end; then data-drive Levels 2–3.
+4. Precision meter, personal-best persistence (SwiftData), retry loop, rewards.
+5. Adaptive difficulty + signal capture; accessibility + experience-budget pass. Then Levels 4–5.
 
 ## 11. Open items
+- Precision-metric weighting and exactly how "beat your best" is surfaced (tune on-device with him).
+- First buildable slice = Levels 1–3 (confirm) vs. including 4–5.
 - VO: pre-recorded voice talent vs. synthesized for Wave 1.
-- Starter object set — confirm Cat / Rocket / Flower (or swap to Caspian's favorites).
-- Exact tidy-morph feel (duration/easing/haptic) — tune on-device with him.
 - Minimum iOS version (17 vs. latest-only) and device list (which iPad).
+- Whether dot-to-dot ([`PRD.md`](PRD.md)) survives as an optional warm-up inside Track 1.

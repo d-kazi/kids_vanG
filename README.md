@@ -80,8 +80,9 @@ kids_vanG/
 ## Product Requirements & Plans
 
 - iOS platform PRD (full product: 4 skill domains + parent app): [PRD_iOS_APP.md](PRD_iOS_APP.md)
-- Drawing Wave 1 PRD (iOS "Shape Builder" level + engine): [PRD_DRAWING_WAVE1.md](PRD_DRAWING_WAVE1.md)
-- PRD (drawing roadmap and content ladder): [PRD.md](PRD.md)
+- Drawing domain curriculum (parallel skill tracks): [PRD_DRAWING_DOMAIN.md](PRD_DRAWING_DOMAIN.md)
+- Drawing Wave 1 PRD (iOS Precision / line-control level + engine): [PRD_DRAWING_WAVE1.md](PRD_DRAWING_WAVE1.md)
+- PRD (legacy dot-to-dot ladder, superseded for iOS): [PRD.md](PRD.md)
 - Development plan to V1 (milestones & tasks): [DEVELOPMENT_PLAN_V1.md](DEVELOPMENT_PLAN_V1.md)
 
 ## API Endpoints

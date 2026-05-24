@@ -128,24 +128,27 @@ symmetry, mental rotation, part/whole relationships, and simple spatial navigati
 **Signals:** accuracy, time-to-solve, rotation difficulty solved, error patterns,
 hint usage.
 
-### 5.2 Drawing  *(reimagined for iOS — detailed spec in [`PRD_DRAWING_WAVE1.md`](PRD_DRAWING_WAVE1.md))*
-**Objective:** move a child from rough, inconsistent shapes to **distinct, clear, consistent
-objects** — fine-motor control, line confidence, and creative expression.
+### 5.2 Drawing  *(curriculum: [`PRD_DRAWING_DOMAIN.md`](PRD_DRAWING_DOMAIN.md) · Wave 1: [`PRD_DRAWING_WAVE1.md`](PRD_DRAWING_WAVE1.md))*
+**Objective:** move a child from rough, inconsistent shapes to **accurate, precise, consistent**
+drawing — and, separately, to **composition**. Drawing is treated not as one skill but as several
+**parallel skill tracks**, each leveling independently:
+1. **Precision / Line & Stroke Control** — clean, closed, repeatable lines and shapes *(Wave 1)*.
+2. **Observation & Construction (Accuracy)** — build objects from primitives with correct proportion.
+3. **Composition & Layout** — arranging elements into a balanced scene.
+4. **Coloring** (separate track) — fill precision, color choice, blending.
+5. **Detail & Refinement** — distinguishing marks that make an object distinct.
+6. *Deferred (~7+):* form/value/shading, perspective, imagination/from-memory.
 
-**Wave 1 focus — age 5, finger-first ("Shape Builder").** Build a recognizable object one
-primitive shape at a time; draw each shape raw with a finger, then tap **"✨ Tidy"** to watch the
-wobbly stroke morph into a clean ideal; assemble; color; celebrate. Teaches **construction** and an
-internal model of "clean," with a gentle **wobble meter** and **fading** tidy-assist as skill grows.
-Built on a custom, Metal-backed, 120 Hz **whiteboard-clean** ink engine (not PencilKit, since the
-tidy mechanic needs raw-stroke access). See the dedicated PRD for the level, mechanic, and engine
-architecture.
+**Wave 1 focus — age 5, finger-first (Precision track, "Steady Hand").** Mechanic is
+**aim → compare → retry**: a faint target appears, the child draws it freehand, the app shows an
+**honest overlay** of his line vs. the ideal (where he drifted) plus a positive precision meter, and
+he retries to **beat his own best**. Deliberate practice with feedback — **no auto-correction, no
+fail states, no peer comparison**. Built on a custom, Metal-backed, 120 Hz **whiteboard-clean** ink
+engine. (We dropped an earlier "magic tidy" morph idea: tidying does the motor work for the child
+and doesn't build real precision.) See the dedicated PRDs for tracks, levels, and engine.
 
-**Later waves (direction, not Wave 1):** draw-then-self-check with fewer guides → free-draw
-challenges from a brief prompt. The web prototype's dot-to-dot ladder ([`PRD.md`](PRD.md)) is
-demoted to an optional warm-up rather than the spine.
-
-**Signals:** per-shape consistency (roundness, closure, proportion), tidy-correction magnitude,
-smoothness/jitter, completion, persistence (undos), free-draw effort heuristics.
+**Signals:** closeness to target (RMS deviation), steadiness/smoothness (jitter), closure gap,
+size/proportion match, cross-attempt consistency, and improvement-vs-personal-best trend.
 
 ### 5.3 Reading (English-first)
 **Objective:** systematic, structured phonics → early decoding and comprehension.
