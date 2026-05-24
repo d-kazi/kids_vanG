@@ -79,7 +79,8 @@ kids_vanG/
 
 ## Product Requirements & Plans
 
-- PRD (roadmap and content ladder): [PRD.md](PRD.md)
+- iOS platform PRD (full product: 4 skill domains + parent app): [PRD_iOS_APP.md](PRD_iOS_APP.md)
+- PRD (drawing roadmap and content ladder): [PRD.md](PRD.md)
 - Development plan to V1 (milestones & tasks): [DEVELOPMENT_PLAN_V1.md](DEVELOPMENT_PLAN_V1.md)
 
 ## API Endpoints
