@@ -34,3 +34,13 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         SWIFT_VERSION: "5.9"
         PRODUCT_BUNDLE_IDENTIFIER: com.kidsvang.shapebuilder
+
+schemes:
+  ShapeBuilder:
+    build:
+      targets:
+        ShapeBuilder: all
+    run:
+      config: Debug
+    test:
+      config: Debug
