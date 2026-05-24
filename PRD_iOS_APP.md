@@ -128,18 +128,24 @@ symmetry, mental rotation, part/whole relationships, and simple spatial navigati
 **Signals:** accuracy, time-to-solve, rotation difficulty solved, error patterns,
 hint usage.
 
-### 5.2 Drawing  *(builds on existing 5-stage ladder — see [`PRD.md`](PRD.md))*
-**Objective:** fine-motor control, line confidence, and creative expression.
+### 5.2 Drawing  *(reimagined for iOS — detailed spec in [`PRD_DRAWING_WAVE1.md`](PRD_DRAWING_WAVE1.md))*
+**Objective:** move a child from rough, inconsistent shapes to **distinct, clear, consistent
+objects** — fine-motor control, line confidence, and creative expression.
 
-**Progression (existing ladder, preserved):**
-1. **Connect the Dots** — sequencing & basic control (5→15 dots).
-2. **Trace Over Dots** — smooth curves, hand control (20–30 dots, closer spacing).
-3. **Partial Dots / Anchors** — draw freehand between anchor points.
-4. **Ghost / Fading Guides** — guides fade as the child progresses (memory + confidence).
-5. **Free-Draw Challenge** — draw from a brief prompt; reward effort and creativity.
+**Wave 1 focus — age 5, finger-first ("Shape Builder").** Build a recognizable object one
+primitive shape at a time; draw each shape raw with a finger, then tap **"✨ Tidy"** to watch the
+wobbly stroke morph into a clean ideal; assemble; color; celebrate. Teaches **construction** and an
+internal model of "clean," with a gentle **wobble meter** and **fading** tidy-assist as skill grows.
+Built on a custom, Metal-backed, 120 Hz **whiteboard-clean** ink engine (not PencilKit, since the
+tidy mechanic needs raw-stroke access). See the dedicated PRD for the level, mechanic, and engine
+architecture.
 
-**Signals:** path coverage / dot-hit ratio, smoothness/jitter, completion rate, persistence
-(undos), stroke pressure (if Pencil), free-draw effort heuristics.
+**Later waves (direction, not Wave 1):** draw-then-self-check with fewer guides → free-draw
+challenges from a brief prompt. The web prototype's dot-to-dot ladder ([`PRD.md`](PRD.md)) is
+demoted to an optional warm-up rather than the spine.
+
+**Signals:** per-shape consistency (roundness, closure, proportion), tidy-correction magnitude,
+smoothness/jitter, completion, persistence (undos), free-draw effort heuristics.
 
 ### 5.3 Reading (English-first)
 **Objective:** systematic, structured phonics → early decoding and comprehension.
