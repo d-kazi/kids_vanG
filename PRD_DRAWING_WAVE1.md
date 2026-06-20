@@ -10,6 +10,13 @@
 | **Platform** | iOS native, **iPad-first**, **finger-first** input |
 | **Primary user** | Caspian (age 5) — design-partner persona |
 
+> **Implementation status (Jun 2026).** The product/design decisions in this PRD are unchanged.
+> The **active implementation pivoted to a web app** (`web/`, Vite + React + TS + Tailwind v4)
+> for faster iteration on Caspian's iPad via Safari + "Add to Home Screen". The iOS-native
+> architecture in §4 below is preserved as the reference for the eventual native iOS port;
+> the Swift `ios/DrawingEngine/` package likewise stays as a reference (canonical engine is
+> now the TypeScript port at `web/src/lib/engine/`).
+
 > **What this is.** Wave 1 builds **Track 1 — Precision / Line & Stroke Control** from the Drawing
 > domain curriculum ([`PRD_DRAWING_DOMAIN.md`](PRD_DRAWING_DOMAIN.md)). It is the motor foundation:
 > teaching Caspian's hand to put an intended line exactly where he wants it, and to draw clean,

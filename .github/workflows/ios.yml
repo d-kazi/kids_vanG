@@ -1,7 +1,8 @@
 name: iOS
 
-# Runs on GitHub's macOS runners (real Xcode toolchain). Scoped to iOS paths
-# so it doesn't spend macOS minutes on web-only changes.
+# Runs on GitHub's macOS runners. Only exercises the pure-Swift DrawingEngine
+# package (kept as a reference / future engine). The app target was removed
+# when the active implementation pivoted to web (see web/).
 on:
   push:
     paths:
@@ -19,26 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Toolchain
-        run: swift --version && xcodebuild -version
+        run: swift --version
       - name: swift test
         working-directory: ios/DrawingEngine
         run: swift test
-
-  app-build:
-    name: Build Shape Builder (iOS Simulator)
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install XcodeGen
-        run: brew install xcodegen
-      - name: Generate Xcode project
-        working-directory: ios/ShapeBuilderApp
-        run: xcodegen generate
-      - name: Build
-        working-directory: ios/ShapeBuilderApp
-        run: |
-          xcodebuild build \
-            -project ShapeBuilder.xcodeproj \
-            -scheme ShapeBuilder \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO

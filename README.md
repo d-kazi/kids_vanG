@@ -1,4 +1,14 @@
-# Kids VanG Dot-to-Dot Drawing App
+# Kids VanG
+
+> **Active implementation: `web/`** — Vite + React + TypeScript Wave 1 drawing app
+> ("Steady Hand", aim → compare → retry). See [`web/README.md`](web/README.md) and
+> [`PRD_DRAWING_WAVE1.md`](PRD_DRAWING_WAVE1.md).
+>
+> Everything below is the **legacy** dot-to-dot prototype, kept for reference only.
+
+---
+
+# Kids VanG Dot-to-Dot Drawing App (legacy prototype)
 
 An interactive web application that helps kids learn to draw by connecting dots to create fun characters like smiley faces, children, and superheroes.
 
